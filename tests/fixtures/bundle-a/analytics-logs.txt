@@ -1,0 +1,4 @@
+LOCAL ANALYTICS (last 1 day)
+-- Events (2) --
+12:57:01 | editor_user_assetUpload_start
+12:57:09 | editor_system_assetUpload_success

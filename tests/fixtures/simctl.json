@@ -1,0 +1,4 @@
+{"devices": {"com.apple.CoreSimulator.SimRuntime.iOS-26-0": [
+  {"udid": "AAAAAAAA-0000-0000-0000-000000000001", "name": "iPhone 17 Pro", "state": "Booted", "isAvailable": true},
+  {"udid": "BBBBBBBB-0000-0000-0000-000000000002", "name": "iPhone 17", "state": "Shutdown", "isAvailable": true},
+  {"udid": "CCCCCCCC-0000-0000-0000-000000000003", "name": "Elva-Tests-0", "state": "Shutdown", "isAvailable": true}]}}

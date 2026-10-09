@@ -1,0 +1,14 @@
+{
+  "name": "ios-team",
+  "description": "ios-team: an agent team for the elva-ios repository in Claude Code.",
+  "owner": {
+    "name": "Oleg Kalistratov"
+  },
+  "plugins": [
+    {
+      "name": "ios-team",
+      "source": "./",
+      "description": "Coordinator protocol plus seven specialist agents for elva-ios, with guards, leases and model routing."
+    }
+  ]
+}

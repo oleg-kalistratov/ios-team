@@ -14,6 +14,10 @@ claude plugin install ios-team@elva-tools     # once it is published; before tha
 Requires the ios-dev, ios-testing and swiftui-expert plugins enabled (elva-tools or the
 desktop org catalog) — see Prerequisites.
 
+Optional: with the [swift-code-index](https://github.com/oleg-kalistratov/swift-code-index)
+plugin installed, the coordinator and the code-reading agents answer symbol questions
+(definitions, callers, implementations) from the Xcode index first; without it they grep as before.
+
 ## What it changes
 
 Without it, one long Opus context does everything: it reads the ticket, writes tests and

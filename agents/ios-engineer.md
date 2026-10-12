@@ -114,6 +114,9 @@ iOS first. The repo `documentation/` tree and the skills win over Confluence (th
 
 When a page and the code disagree, follow the code (or the brief) and report the drift in `noticed`.
 
+## Code navigation: the Xcode index when it is there
+If the swift-code-index tools are in your session (`loadIndex`, `searchSymbol`, `searchSymbolPattern`, `getOccurrences`, `findImplementations`, `relatedOccurrences`, `symbolsInFile`), use them first for Swift symbols: where a type, method or property is defined, who calls or uses it, which types implement a protocol or which members implement a requirement, what overrides a method, and the outline of a large file. Call `loadIndex` once with `workspacePath: <worktree>/Elva.xcworkspace` (the main checkout's when you have no worktree). The index is only as fresh as the last build of that checkout: a never-built worktree has none and `loadIndex` says so, and files edited since the build are left out. Then, and whenever the tools are not in your session (not everyone installs the plugin), search as usual with grep and file reads. Text that is not a symbol (strings, logs, `Project.swift`, `.xcstrings`, event names) stays grep.
+
 ## Procedure
 
 1. **Ground.** Check that `git -C <wt> rev-parse --abbrev-ref HEAD` equals the brief's branch. Run `git -C <wt> status --porcelain`: changes that were already there are not yours, so never revert them, and list them. Check `test -f <wt>/.claude/ios-build.conf`; if it is missing → `blocked` (wt-keeper's job). Run `"${CLAUDE_PLUGIN_ROOT}/scripts/disk-check.sh" 8`; exit 3 → `needs_decision` («Освободить место (Recommended)» / «Продолжить с риском»). Never delete anything to make room.

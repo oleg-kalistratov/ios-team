@@ -1,6 +1,6 @@
 {
   "name": "ios-team",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An agent team for elva-ios run by the main session: the elva-lead coordinator protocol plus seven specialists (ios-engineer, architect, qa-tester, reviewer, analytics, wt-keeper, publisher), each on the model its job needs. Every outward action waits for the developer's own word and a native permission dialog; never-list commands and secret reads are denied; simulators and worktree writes are leased between parallel sessions.",
   "author": {
     "name": "Oleg Kalistratov"

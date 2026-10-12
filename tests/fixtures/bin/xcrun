@@ -1,0 +1,4 @@
+#!/bin/bash
+# Fake xcrun for hooks.test.sh: answers `simctl list devices -j` from ../simctl.json, ignores everything else.
+[ "${1:-} ${2:-}" = "simctl list" ] && cat "$(dirname "$0")/../simctl.json"
+exit 0

@@ -1,0 +1,14 @@
+{
+  "name": "ios-team",
+  "description": "ios-team: an agent team for iOS repositories in Claude Code.",
+  "owner": {
+    "name": "Oleg Kalistratov"
+  },
+  "plugins": [
+    {
+      "name": "ios-team",
+      "source": "./",
+      "description": "Coordinator protocol plus seven specialist agents for an iOS project, with guards, leases and model routing; project values come from a local project.md."
+    }
+  ]
+}

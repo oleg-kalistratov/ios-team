@@ -1,0 +1,9 @@
+APP LOGS (last 1 day)
+
+Date: 06-10-2026
+Total entries: 3
+time | level | message | file | function | line
+-----|-------|---------|------|----------|-----
+12:57:01.120 | info | [Auth] signed in as user@example.com | Auth.swift | signIn | 10
+12:57:02.300 | error | [Upload] failed file_id 1633541234 for 40e3b553-1111-2222-3333-444455556666 | Upload.swift | send | 42
+12:57:03.000 | warning | [Socket] reconnect, phone +7 912 345-67-89 | Socket.swift | open | 7

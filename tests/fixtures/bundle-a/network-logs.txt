@@ -1,0 +1,8 @@
+NETWORK LOGS (2)
+Path: /v1/projects/40e3b553-1111-2222-3333-444455556666/media
+Method: GET
+Status code: 200
+╞══════════════════════════════════════════════════════════════════════╡
+Path: /v1/projects/123456/media
+Method: GET
+Status code: 500

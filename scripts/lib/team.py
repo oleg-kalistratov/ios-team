@@ -51,6 +51,14 @@ def ask(why):
     say({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": why}})
 
 
+def ask_outward(c, why):
+    """Ask for a routine outward or destructive act, unless Oleg switched the session to bypassPermissions himself: then stay silent
+    and let Claude Code's own mode decide. Denies never go through here, and neither do self-protection, unparsed commands or commit lint."""
+    if c.mode == "bypassPermissions":
+        sys.exit(0)
+    ask(why)
+
+
 def sh(args, timeout=20):
     try:
         return subprocess.run(args, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL).stdout
@@ -83,6 +91,7 @@ class Ctx:
     def __init__(s, d):
         s.d, s.cwd, s.session, s.agent = d, str(d.get("cwd") or os.getcwd()), str(d.get("session_id") or ""), str(d.get("agent_id") or "")
         s.role = str(d.get("agent_type") or "") if s.agent else ""
+        s.mode = str(d.get("permission_mode") or "")
         s.scratch = os.path.realpath(str(d["scratchpad_dir"])) if d.get("scratchpad_dir") else ""
         s.tool, i = str(d.get("tool_name") or ""), d.get("tool_input")
         s.inp = i if isinstance(i, dict) else {}
@@ -1147,6 +1156,8 @@ def mode_bash(c):
         deny("из субагента нельзя: %s" % "; ".join(unknown + ["изменение: " + p for p in prot]))
     if (outs or asks) and c.role in RO:
         deny("роль %s только читает: %s" % (c.role, "; ".join(asks)))
+    if (outs or asks) and not (unknown or prot):
+        ask_outward(c, "; ".join(([" и ".join(outs)] if outs else []) + asks))
     if outs or asks or unknown or prot:
         ask("; ".join(([" и ".join(outs)] if outs else []) + asks + unknown + ["Изменение: " + p for p in prot]))
 
@@ -1439,7 +1450,7 @@ def mode_mcp(c):
     for k, v in walk(c.inp):
         if k in LABELS and LABELS[k] not in parts and short(v):
             parts[LABELS[k]] = short(v)
-    ask("Запись во внешнюю систему: %s%s" % (last, " — " + "; ".join("%s: %s" % kv for kv in list(parts.items())[:7]) if parts else ""))
+    ask_outward(c, "Запись во внешнюю систему: %s%s" % (last, " — " + "; ".join("%s: %s" % kv for kv in list(parts.items())[:7]) if parts else ""))
 
 
 # ---- leases: one directory per lease, owner.json inside; mkdir is the atomic acquire

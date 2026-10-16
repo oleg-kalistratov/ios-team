@@ -130,9 +130,14 @@ to the GitHub API with a token taken from the keychain, archives or whole-tree c
 sweep `Secrets/` along, case variants of secret paths on the case-insensitive APFS disk,
 and the plugin's own files or `~/.claude/settings.json` being edited to switch the hooks
 off. Treat them as a seatbelt against mistakes, not as a sandbox against a confused or
-prompt-injected agent. Also unverified: whether `ask` still shows a dialog under
-`bypassPermissions` or auto mode — the pilot checks it first with `git push --dry-run`;
-until it is confirmed, do not run outward steps in bypass mode.
+prompt-injected agent.
+
+**Bypass mode.** When you switch the session to `bypassPermissions` yourself, the routine
+outward and destructive asks (push, PR create/edit, Jira/Confluence/TestOps writes, worktree
+and branch removal, lease take, device runs, `rm -rf` outside scratch) stay silent, because
+the hook reads `permission_mode` from its input. Denies stay denies in every mode, and these
+still ask in bypass: edits to the plugin or Claude Code settings, commands the guard could
+not parse or verify, commit-lint findings and Fable spawns.
 
 **Backstops that do not depend on the hooks — recommended.**
 - **GitHub branch protection** (or a ruleset) on `develop`, `main`, `master` and
@@ -277,9 +282,9 @@ parser) after editing an agent.
 
 ## Not verified yet
 
-- That a hook's `ask` still shows the dialog under every permission mode the desktop app
-  offers (auto, accept-edits, bypass) — the first pilot step checks it with
-  `git push --dry-run`.
+- That a hook's `ask` still shows the dialog under auto and accept-edits modes (it does under
+  bypass, which is why routine asks are silenced there) — the first pilot step checks it
+  with `git push --dry-run`.
 - How a background agent treats a command or an MCP read that is not pre-approved
   (auto-deny or the auto mode classifier) — the pilot watches the engineer's first run and
   the background architect's and analytics agent's Confluence and Drive reads.

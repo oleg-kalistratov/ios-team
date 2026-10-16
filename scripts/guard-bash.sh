@@ -12,4 +12,5 @@
 # Ask (JSON permissionDecision ask, Russian reason): push, gh pr/issue/api writes, worktree remove, branch -D, device runs, lease take,
 # rm -rf outside scratch/build dirs, rm -f outside a linked worktree/scratch, git stash -u/-a with Secrets/, main-checkout
 # checkout/reset, and (main session) the self-protection, $VAR and piped-code cases above. Fails closed.
+# permission_mode bypassPermissions: the routine asks above stay silent; self-protection, $VAR and piped-code cases still ask.
 IOS_TEAM_HOOK=crit exec "$(dirname "$0")/lib/run.sh" bash

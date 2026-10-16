@@ -597,6 +597,34 @@ IOS_TEAM_MAIN_REPO= HOME=$NB check allow commit-lint.sh "$(B 'git commit -m "wha
 ok "the coordinator skill is skills/lead with name: lead (agent-office finds names ending in lead)" \
   'grep -qx "name: lead" "$ROOT/skills/lead/SKILL.md" && [ "$(ls "$ROOT/skills" | tr "\n" " ")" = "lead pr-description-ru " ]'
 check deny agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer 'ticket: ABC-1')" "\(lead §6 router\)"
+
+# --- bypassPermissions: Oleg's own mode silences routine outward asks; denies, self-protection, unparsed commands and commit lint stay
+M() { jq -c --arg m "$1" '. + {permission_mode: $m}' <<<"$2"; }   # M <mode> <json>
+PR='git push -u origin HEAD && gh pr create --base develop --title "[ABC-9999] fix" --body-file /tmp/b.md'
+for m in default acceptEdits auto plan; do check ask guard-bash.sh "$(M $m "$(B "$PR" "$W")")" "Пуш"; done
+check allow guard-bash.sh "$(M bypassPermissions "$(B "$PR" "$W")")"
+check allow guard-bash.sh "$(M bypassPermissions "$(B "git -C $R worktree remove $W" "$T")")"
+check allow guard-bash.sh "$(M bypassPermissions "$(B "\"$S/lease.sh\" take sim $A")")"
+check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J ${JIRA}__createJiraIssue "$JI")")"
+check ask guard-mcp-writes.sh "$(M default "$(J ${JIRA}__createJiraIssue "$JI")")" "Запись во внешнюю систему"
+check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J mcp__plugin_ios-testing_allure-testops__testops_create_testcase '{"name":"x"}')")"
+check deny guard-bash.sh "$(M bypassPermissions "$(B "$PR" "$W" ios-team:ios-engineer)")" "publisher"
+for m in default bypassPermissions; do
+  check deny guard-bash.sh "$(M $m "$(B 'gh pr merge 1234 --squash' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'git push --force origin develop' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'git push origin --delete feature/x' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'fastlane beta' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'gh workflow run ci.yml' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'sudo ls' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B 'git commit --no-verify -m "ABC-9999: x"' "$W")")"
+  check deny guard-bash.sh "$(M $m "$(B "rm -rf $HOME" "$W")")"
+  check deny guard-secrets.sh "$(M $m "$(B 'cat Secrets/Secrets.xcconfig')")"
+  check deny guard-mcp-writes.sh "$(M $m "$(J mcp__plugin_ios-testing_allure-testops__testops_delete_testcase '{"id":1}')")"
+  check ask guard-bash.sh "$(M $m "$(B 'cp /tmp/x.json ~/.claude/settings.json' "$W")")" "настройки Claude Code"
+  check ask guard-bash.sh "$(M $m "$(B 'git push -u origin HEAD && cp /tmp/x.json ~/.claude/settings.json' "$W")")" "Пуш.*настройки Claude Code"
+  check ask writer-guard.sh "$(M $m "$(J Write '{"file_path":"'"$HOME"'/.claude/settings.json"}' "$W")")" "настройки"
+  check ask commit-lint.sh "$(M $m "$(B 'git commit --no-edit' "$W")")" "Не вижу текста"
+done
 plugin_paths() { grep -ohE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT"/agents/*.md "$ROOT"/skills/*/SKILL.md "$ROOT"/skills/*/references/*.md |
   sed -e 's|^\${CLAUDE_PLUGIN_ROOT}/||' -e 's/\.*$//' | sort -u | while read -r p; do [ -e "$ROOT/$p" ] || echo "$p"; done; }
 ok "every \${CLAUDE_PLUGIN_ROOT}/ path the prompts name exists ($(plugin_paths | tr '\n' ' '))" '[ -z "$(plugin_paths)" ]'

@@ -32,8 +32,12 @@ bundle=$res/$plan.xcresult; log=$res/$plan.log; sum=$res/$plan.summary.json
 mkdir -p "$res" "$dd"; rm -rf "$bundle" "$sum"
 stamp_file=$dd/ios-team-build-for-testing-$plan.stamp
 stamp=$({ git rev-parse HEAD; git diff HEAD; git ls-files --others --exclude-standard -z | xargs -0 shasum 2>/dev/null; } | shasum | cut -c1-40)
-common=(-workspace "$ws" -scheme "$plan" -testPlan "$plan" -destination "id=$udid" -derivedDataPath "$dd"
+common=(-workspace "$ws" -scheme "$plan" -testPlan "$plan" -destination "id=$udid"
   -skipPackagePluginValidation -skipMacroValidation)
+# -derivedDataPath also moves the module cache into that folder, so every compile command differs from the app build's
+# and Xcode's (global module cache) and each build recompiles everything the other one built (measured: ~3900 files,
+# 2-10 min per gate). When dd is Xcode's own folder for this workspace, let xcodebuild find it by itself.
+[ "$dd" = "$("$(dirname "$0")/run.sh" derived-data "$root/$ws" 2>/dev/null)" ] || common+=(-derivedDataPath "$dd")
 echo "▶︎ Plan:      $plan"
 started=$SECONDS
 finish() {

@@ -45,7 +45,7 @@ analytics_table: <Событие | Когда | Параметры from the anal
 figma: <node link + the values to use (pt, colors, fonts), or «нет доступа — не угадывать, вернуть needs_decision»>
 docs: <repo docs to read; Confluence page ids only when an endpoint is wired (a Backend service page + the common Error page, from `~/.claude/ios-team/links.md`)>
 tests: <test targets and the -only-testing filters expected; a new target needs Project.swift + Workspace + both test plans>
-gate: gate.sh <worktree> --tests "<filter>" --base HEAD [--plan <nightly_test_plan>] --logs <scratch>/ios-engineer/<ticket>/gate   (the shape only — the agent has the script's full path in its own instructions; red: the new tests fail; green: the targeted gate on the touched targets — the full gate runs once at «комить», never by the engineer)
+gate: gate.sh <worktree> --tests "<filter>" --base HEAD [--plan <nightly_test_plan>] --logs <scratch>/ios-engineer/<ticket>/gate   (the shape only — the agent has the script's full path in its own instructions; red: the new tests fail, run on the new and changed suites only; green: the targeted gate on the task's suites — `<Target>/<Suite>` filters, never a whole `<Target>`; the full suite runs in the PR's CI)
 full_gate: <omit | required — only on Oleg's word>
 findings: <fix mode only: [{source: reviewer|qa-tester|oleg, file_line, repro, expected, actual}]>
 not_in_scope: <what not to touch; side fixes are reported in noticed, not made>

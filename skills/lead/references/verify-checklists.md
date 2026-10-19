@@ -5,7 +5,7 @@ Stable item ids. The coordinator puts the ids that apply into the qa-tester brie
 **Draft — Oleg reviews each section once during the pilot.**
 
 ## Universal (every UI ticket)
-- U1 <dev_scheme> built from this worktree is installed; the evidence names branch@sha. Never the production flavor (`<prod_bundle_id>`) (it hits the real paywall).
+- U1 The brief's flavor built from this worktree is installed on a simulator of that flavor's set; the evidence names branch@sha. Prod (`<prod_bundle_id>`) only for subscription cases, up to the Apple purchase sheet, never through it.
 - U2 Light and dark appearance of the changed screen — when colours, materials or images changed. Switch with `xcrun simctl ui <UDID> appearance dark|light` and restore the original value afterwards.
 - U3 Russian and one more catalog language (en, es, pt-BR, de, fr, it): nothing truncated, no raw keys — when copy or layout changed. Use launch arguments (`-AppleLanguages (ru)`), not the simulator's global settings.
 - U4 A large Dynamic Type size: no clipping, no overlap — when layout changed. `xcrun simctl ui <UDID> content_size <size>`, restored afterwards.

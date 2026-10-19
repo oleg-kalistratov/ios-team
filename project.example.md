@@ -24,8 +24,11 @@ prod_bundle_id: com.example.myapp
 dev_url_scheme: myapp-test
 # Name prefix of dedicated test simulators; gate.sh prefers them over ordinary iPhones (empty: iPhones only).
 sim_prefix: MyApp-Tests
-# Fixed simulators every session's qa-tester shares (comma-separated names); it picks a free one by device class and never creates or deletes simulators. Empty: any free iPhone.
-qa_sims: MyApp-Tests-0, MyApp-Tests-1, QA iPad, QA Foldable
+# Scheme of the production flavor (ios.sh --prod). The qa-tester uses it only for subscription cases, which do not work on the dev flavor.
+prod_scheme: MyApp
+# Fixed simulators every session shares (comma-separated names), one set per flavor so each keeps its own login; the qa-tester picks a free one by device class and never creates or deletes simulators. Name the dev set with sim_prefix so gate.sh runs tests there. Empty: any free iPhone.
+qa_sims_dev: MyApp-Tests-0, MyApp-Tests-Foldable
+qa_sims_prod: MyApp-Prod-0, MyApp-Prod-1
 # Name of the environment variable the repo's Scripts/test.sh reads for its DerivedData path; gate.sh sets it per worktree.
 derived_data_env: MYAPP_TEST_DERIVED_DATA
 # Regular expression a commit subject must match (commit-lint); default ^[A-Z][A-Z0-9]+-[0-9]+: .+|^Tech: .+

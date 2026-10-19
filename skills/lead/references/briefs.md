@@ -86,7 +86,8 @@ checklist_ids: <from references/verify-checklists.md: U1, U5, U6, U7 + the area 
 coordinator_cases: <abs path of the file with T1..Tn — it reads it only after deriving its own>
 rerun_ids: <rerun mode: only these ids>
 before: <compare mode: abs path of the scratch checkout built from the base (the «before» app), or none>
-build: <«собери и поставь <dev_scheme> из worktree» | «уже стоит: <dev_scheme> <branch>@<sha>»> — always ios.sh with --simulator, never the production flavor (`prod_bundle_id`)
+flavor: <dev | prod — prod only when a case touches subscriptions (paywall, offers, purchase, restore, manage/cancel subscription, wallet, balance): they do not work on dev>
+build: <«собери и поставь <dev_scheme|prod_scheme> из worktree» | «уже стоит: <scheme> <branch>@<sha>»> — always ios.sh with --simulator (prod: plus --prod), on a simulator of that flavor's set
 simulator: <UDID and name | «любой свободный»>
 media_wanted: <screenshots | video for the PR | none>
 analytics_check: <events with expected params (the analytics agent's qa_handoff) to find in Debug Menu → Local Analytics, or none>

@@ -598,17 +598,30 @@ ok "the coordinator skill is skills/lead with name: lead (agent-office finds nam
   'grep -qx "name: lead" "$ROOT/skills/lead/SKILL.md" && [ "$(ls "$ROOT/skills" | tr "\n" " ")" = "lead pr-description-ru " ]'
 check deny agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer 'ticket: ABC-1')" "\(lead §6 router\)"
 
-# --- bypassPermissions: Oleg's own mode silences routine outward asks; denies, self-protection, unparsed commands and commit lint stay
+# --- bypassPermissions: Oleg's own mode turns every ask into allow (written to the bypass journal); denies stay in every mode
 M() { jq -c --arg m "$1" '. + {permission_mode: $m}' <<<"$2"; }   # M <mode> <json>
+BJ=$HOME/.claude/ios-team/state/bypass-allowed.jsonl OK="одобрено без окна"
 PR='git push -u origin HEAD && gh pr create --base develop --title "[ABC-9999] fix" --body-file /tmp/b.md'
 for m in default acceptEdits auto plan; do check ask guard-bash.sh "$(M $m "$(B "$PR" "$W")")" "Пуш"; done
-check allow guard-bash.sh "$(M bypassPermissions "$(B "$PR" "$W")")"
-check allow guard-bash.sh "$(M bypassPermissions "$(B "git -C $R worktree remove $W" "$T")")"
-check allow guard-bash.sh "$(M bypassPermissions "$(B "\"$S/lease.sh\" take sim $A")")"
-check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J ${JIRA}__createJiraIssue "$JI")")"
+ok "no bypass journal before the first bypass ask" '[ ! -e "$BJ" ]'
+check allow guard-bash.sh "$(M bypassPermissions "$(B "$PR" "$W")")" "\"allow\".*$OK.*Пуш"
+ok "the bypass journal names the allowed push" 'tail -1 "$BJ" | jq -e ".tool == \"Bash\" and .session == \"S1\" and (.reason | test(\"Пуш\"))" >/dev/null'
+check allow guard-bash.sh "$(M bypassPermissions "$(B "git -C $R worktree remove $W" "$T")")" "$OK"
+check allow guard-bash.sh "$(M bypassPermissions "$(B "\"$S/lease.sh\" take sim $A")")" "$OK"
+check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J ${JIRA}__createJiraIssue "$JI")")" "$OK.*Запись во внешнюю систему"
 check ask guard-mcp-writes.sh "$(M default "$(J ${JIRA}__createJiraIssue "$JI")")" "Запись во внешнюю систему"
-check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J mcp__plugin_ios-testing_allure-testops__testops_create_testcase '{"name":"x"}')")"
+check allow guard-mcp-writes.sh "$(M bypassPermissions "$(J mcp__plugin_ios-testing_allure-testops__testops_create_testcase '{"name":"x"}')")" "$OK"
 check deny guard-bash.sh "$(M bypassPermissions "$(B "$PR" "$W" ios-team:ios-engineer)")" "publisher"
+VARCMD='SC=/tmp/x.sh; "$SC" --flag'
+check ask guard-bash.sh "$(M default "$(B "$VARCMD" "$W")")" "напиши её прямо"
+check allow guard-bash.sh "$(M bypassPermissions "$(B "$VARCMD" "$W")")" "$OK.*напиши её прямо"
+check ask agent-spawn-guard.sh "$(M default "$(spawnr ios-team:ios-engineer $'route: fable xhigh — Metal\nticket: ABC-1' fable xhigh)")" "Fable"
+check allow agent-spawn-guard.sh "$(M bypassPermissions "$(spawnr ios-team:ios-engineer $'route: fable xhigh — Metal\nticket: ABC-1' fable xhigh)")" "$OK.*Fable"
+stage Frameworks/CV1Domain/Sources/NewService.swift "$(hdr NewService.swift)import Foundation\nstruct NewService {}\n"
+check ask commit-lint.sh "$(M default "$(B 'git commit -m "ABC-9999: x"' "$W")")" "новый файл в Frameworks"
+check allow commit-lint.sh "$(M bypassPermissions "$(B 'git commit -m "ABC-9999: x"' "$W")")" "$OK.*новый файл в Frameworks"
+ok "the bypass journal has the commit-lint row" 'tail -1 "$BJ" | jq -e ".reason | test(\"новый файл в Frameworks\")" >/dev/null'
+stage Modules/FooFeature/Sources/Clean.swift "$(hdr Clean.swift)struct Clean {\n    let value = 2\n}\n"
 for m in default bypassPermissions; do
   check deny guard-bash.sh "$(M $m "$(B 'gh pr merge 1234 --squash' "$W")")"
   check deny guard-bash.sh "$(M $m "$(B 'git push --force origin develop' "$W")")"
@@ -619,11 +632,18 @@ for m in default bypassPermissions; do
   check deny guard-bash.sh "$(M $m "$(B 'git commit --no-verify -m "ABC-9999: x"' "$W")")"
   check deny guard-bash.sh "$(M $m "$(B "rm -rf $HOME" "$W")")"
   check deny guard-secrets.sh "$(M $m "$(B 'cat Secrets/Secrets.xcconfig')")"
+  check deny guard-secrets.sh "$(M $m "$(J Read '{"file_path":"'"$R"'/fastlane/AuthKey_X.p8"}')")"
   check deny guard-mcp-writes.sh "$(M $m "$(J mcp__plugin_ios-testing_allure-testops__testops_delete_testcase '{"id":1}')")"
-  check ask guard-bash.sh "$(M $m "$(B 'cp /tmp/x.json ~/.claude/settings.json' "$W")")" "настройки Claude Code"
-  check ask guard-bash.sh "$(M $m "$(B 'git push -u origin HEAD && cp /tmp/x.json ~/.claude/settings.json' "$W")")" "Пуш.*настройки Claude Code"
-  check ask writer-guard.sh "$(M $m "$(J Write '{"file_path":"'"$HOME"'/.claude/settings.json"}' "$W")")" "настройки"
-  check ask commit-lint.sh "$(M $m "$(B 'git commit --no-edit' "$W")")" "Не вижу текста"
+  check deny writer-guard.sh "$(M $m "$(J Write '{"file_path":"'"$HOME"'/.claude/settings.json"}' "$W" ios-team:ios-engineer)")"
+done
+n=$(wc -l <"$BJ")
+check deny guard-bash.sh "$(M bypassPermissions "$(B 'fastlane beta' "$W")")"
+ok "a deny in bypass writes nothing to the bypass journal" '[ "$(wc -l <"$BJ")" = "$n" ]'
+for m in default:ask bypassPermissions:allow; do
+  check ${m#*:} guard-bash.sh "$(M ${m%:*} "$(B 'cp /tmp/x.json ~/.claude/settings.json' "$W")")" "настройки Claude Code"
+  check ${m#*:} guard-bash.sh "$(M ${m%:*} "$(B 'git push -u origin HEAD && cp /tmp/x.json ~/.claude/settings.json' "$W")")" "Пуш.*настройки Claude Code"
+  check ${m#*:} writer-guard.sh "$(M ${m%:*} "$(J Write '{"file_path":"'"$HOME"'/.claude/settings.json"}' "$W")")" "настройки"
+  check ${m#*:} commit-lint.sh "$(M ${m%:*} "$(B 'git commit --no-edit' "$W")")" "Не вижу текста"
 done
 plugin_paths() { grep -ohE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT"/agents/*.md "$ROOT"/skills/*/SKILL.md "$ROOT"/skills/*/references/*.md |
   sed -e 's|^\${CLAUDE_PLUGIN_ROOT}/||' -e 's/\.*$//' | sort -u | while read -r p; do [ -e "$ROOT/$p" ] || echo "$p"; done; }

@@ -132,12 +132,16 @@ and the plugin's own files or `~/.claude/settings.json` being edited to switch t
 off. Treat them as a seatbelt against mistakes, not as a sandbox against a confused or
 prompt-injected agent.
 
-**Bypass mode.** When you switch the session to `bypassPermissions` yourself, the routine
-outward and destructive asks (push, PR create/edit, Jira/Confluence/TestOps writes, worktree
-and branch removal, lease take, device runs, `rm -rf` outside scratch) stay silent, because
-the hook reads `permission_mode` from its input. Denies stay denies in every mode, and these
-still ask in bypass: edits to the plugin or Claude Code settings, commands the guard could
-not parse or verify, commit-lint findings and Fable spawns.
+**Bypass mode.** When you switch the session to `bypassPermissions` yourself, the hooks read
+`permission_mode` from their input and answer `allow` wherever they would have asked: push,
+PR create/edit, Jira/Confluence/TestOps writes, worktree and branch removal, lease take,
+device runs, `rm -rf` outside scratch, and also edits to the plugin or Claude Code settings,
+commands the guard could not parse or verify (a `$VAR` command name, piped code), commit-lint
+and arch-check findings and Fable spawns. Each such allow is appended as one JSON line
+(time, session, agent, tool, cwd, the reason the dialog would have shown) to
+`~/.claude/ios-team/state/bypass-allowed.jsonl` — read it after an unattended run. Denies stay
+denies in every mode: the release tool, PR merge, secrets, force and delete pushes, `--no-verify`,
+switching the hooks off, sudo and the rest of the never-list, plus subagent bans.
 
 **Backstops that do not depend on the hooks — recommended.**
 - **GitHub branch protection** (or a ruleset) on `develop`, `main`, `master` and
@@ -283,7 +287,7 @@ parser) after editing an agent.
 ## Not verified yet
 
 - That a hook's `ask` still shows the dialog under auto and accept-edits modes (it does under
-  bypass, which is why routine asks are silenced there) — the first pilot step checks it
+  bypass, which is why every ask turns into a logged allow there) — the first pilot step checks it
   with `git push --dry-run`.
 - How a background agent treats a command or an MCP read that is not pre-approved
   (auto-deny or the auto mode classifier) — the pilot watches the engineer's first run and
@@ -297,6 +301,11 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.2.6** — bypass mode no longer shows any hook dialog: with `permission_mode: bypassPermissions` every
+`ask` from the hooks (including self-protection, unparsed or `$VAR` commands, commit-lint and arch-check findings and
+Fable spawns, which still asked in 0.2.5) becomes `allow`, in one place (`ask` in `team.py`), and is written to
+`~/.claude/ios-team/state/bypass-allowed.jsonl`. Denies are unchanged in every mode. Other modes still ask.
 
 **0.2.0** — generic: no project or company name is left in the repo, and `scripts/check-neutral.sh` (run by the
 suite) keeps it that way. Breaking: the coordinator skill is now `lead` (`/ios-team:lead`, `skills/lead`); update the

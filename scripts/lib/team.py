@@ -48,15 +48,19 @@ def deny(why):
 
 
 def ask(why):
+    """The native dialog, unless Oleg switched the session to bypassPermissions himself: then every ask becomes allow and is written to
+    ~/.claude/ios-team/state/bypass-allowed.jsonl. Denies never go through here, so they stay denies in every mode."""
+    if CUR and CUR.mode == "bypassPermissions":
+        try:
+            os.makedirs(STATE, exist_ok=True)
+            with open(os.path.join(STATE, "bypass-allowed.jsonl"), "a", encoding="utf-8") as f:
+                f.write(json.dumps({"at": time.strftime("%Y-%m-%dT%H:%M:%S"), "session": CUR.session, "agent": CUR.role, "tool": CUR.tool,
+                                    "cwd": CUR.cwd, "reason": why}, ensure_ascii=False) + "\n")
+        except OSError as e:
+            sys.stderr.write("ios-team: журнал bypass не записан (%s)\n" % e)
+        say({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow",
+                                    "permissionDecisionReason": "ios-team, bypass — одобрено без окна: " + why}})
     say({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": why}})
-
-
-def ask_outward(c, why):
-    """Ask for a routine outward or destructive act, unless Oleg switched the session to bypassPermissions himself: then stay silent
-    and let Claude Code's own mode decide. Denies never go through here, and neither do self-protection, unparsed commands or commit lint."""
-    if c.mode == "bypassPermissions":
-        sys.exit(0)
-    ask(why)
 
 
 def sh(args, timeout=20):
@@ -98,14 +102,19 @@ class Ctx:
         s.cwd = absp(s.inp["cwd"], s.cwd) if s.tool in BASHY and s.inp.get("cwd") else s.cwd
 
 
+CUR = None
+
+
 def load(critical):
+    global CUR
     if critical:
         signal.signal(signal.SIGALRM, lambda *_: deny("проверка не уложилась в 8 с — действие заблокировано"))
         signal.alarm(8)
     try:
         d = json.loads(sys.stdin.read() or "null")
         if isinstance(d, dict):
-            return Ctx(d)
+            CUR = Ctx(d)
+            return CUR
         raise ValueError("не JSON-объект")
     except Exception as e:
         if critical:
@@ -1156,8 +1165,6 @@ def mode_bash(c):
         deny("из субагента нельзя: %s" % "; ".join(unknown + ["изменение: " + p for p in prot]))
     if (outs or asks) and c.role in RO:
         deny("роль %s только читает: %s" % (c.role, "; ".join(asks)))
-    if (outs or asks) and not (unknown or prot):
-        ask_outward(c, "; ".join(([" и ".join(outs)] if outs else []) + asks))
     if outs or asks or unknown or prot:
         ask("; ".join(([" и ".join(outs)] if outs else []) + asks + unknown + ["Изменение: " + p for p in prot]))
 
@@ -1450,7 +1457,7 @@ def mode_mcp(c):
     for k, v in walk(c.inp):
         if k in LABELS and LABELS[k] not in parts and short(v):
             parts[LABELS[k]] = short(v)
-    ask_outward(c, "Запись во внешнюю систему: %s%s" % (last, " — " + "; ".join("%s: %s" % kv for kv in list(parts.items())[:7]) if parts else ""))
+    ask("Запись во внешнюю систему: %s%s" % (last, " — " + "; ".join("%s: %s" % kv for kv in list(parts.items())[:7]) if parts else ""))
 
 
 # ---- leases: one directory per lease, owner.json inside; mkdir is the atomic acquire

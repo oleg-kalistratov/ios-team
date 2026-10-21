@@ -271,8 +271,10 @@ State lives in `~/.claude/ios-team/leases/`.
   for one ticket (name contains the ticket key, never the shared `sim_prefix*` / `qa_sims_*` ones).
   qa-tester shuts them down after a run; wt-keeper deletes them with the worktree.
 - **Disk** — `scripts/disk-check.sh <GB>` exits 3 below the threshold (10 GB before a
-  worktree, 8 GB before a build); the agents stop and ask, nobody deletes anything to make
-  room.
+  worktree, 8 GB before a build). Below it the agents first run `scripts/sweep.sh` — DerivedData
+  whose worktree no longer exists, simulators of tickets without a worktree, simulators without
+  a runtime, nothing anyone still uses — and only then stop and ask; user files are never
+  touched.
 
 While an agent waits for your answer, the coordinator treats its leases as held even if the
 hooks released them at its stop.
@@ -306,6 +308,18 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.2.8** — fewer stops with a question (measured over a week: 161 of 503 agent stops ended in a question or a block,
+and 70–83 % of a ticket's wall-clock was agents waiting for the answer). New `scripts/sweep.sh`: DerivedData of worktrees
+that no longer exist (by `info.plist` or by Xcode's path hash for the nameless package-resolution leftovers), simulators of
+tickets without a worktree, simulators without a runtime; wt-keeper, ios-engineer and qa-tester run it before they stop on a
+full disk. wt-keeper waits for a running generate instead of returning «tuist ещё идёт», retries a generate once after a
+sweep, and removes a worktree with an open PR when the brief carries `unmerged_ok: yes`. ios-engineer copies a missing
+`ios-build.conf` itself, returns its questions as one packet after planning the whole change, never re-asks what
+`oleg_words`, `architect_decisions` or the new brief field `defaults` already answer, and decides layout values Figma does not
+give, names and the simulator on its own (reported in `noticed`). qa-tester retries a build or install once after a sweep and
+reports a Figma mismatch as a `fail`, never as a question. The lead forwards an answer Oleg already gave in the ticket, sends
+an agent's own defaults back to it, asks only what is left, in one dialog, and writes every answer to the run log.
 
 **0.2.7** — less load, fewer builds. The heavy lease has one unit by default (`IOS_TEAM_HEAVY_UNITS`): parallel
 sessions queue their builds instead of running two xcodebuilds plus two simulators into swap on a 16 GB Mac. New

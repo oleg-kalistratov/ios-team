@@ -557,6 +557,32 @@ ok "ticket-sims delete shuts the simulator down and deletes it, nothing else" 'r
 ok "ticket-sims shutdown skips a shut-down simulator and reports it" 'rm -f "$T/xcrun.log"; FAKE_SIMCTL_JSON=$TS FAKE_XCRUN_LOG=$T/xcrun.log \
   "$S/ticket-sims.sh" ABC-99991 shutdown | grep -q "Duo-ABC-99991.Shutdown" && [ ! -s "$T/xcrun.log" ]'
 ok "ticket-sims without a ticket key or with an unknown action is usage" '"$S/ticket-sims.sh" bad list 2>/dev/null; [ $? = 64 ] && "$S/ticket-sims.sh" ABC-1 erase 2>/dev/null; [ $? = 64 ]'
+DD=$T/dd; xname() { python3 -c '                                                       # --- sweep: dead DerivedData, orphan ticket simulators
+import hashlib, sys
+digest = hashlib.md5(sys.argv[1].encode()).digest(); name = ""
+for half in (int.from_bytes(digest[:8], "big"), int.from_bytes(digest[8:], "big")):
+    letters = ""
+    for _ in range(14):
+        letters = chr(97 + half % 26) + letters; half //= 26
+    name += letters
+print("MyApp-" + name)' "$1"; }
+plist() { printf '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>WorkspacePath</key><string>%s</string></dict></plist>' "$2" > "$1/info.plist"; }
+mkdir -p "$DD/MyApp-gone" "$DD/MyApp-live" "$DD/$(xname "$W/MyApp.xcworkspace")" "$DD/MyApp-aaaaaaaaaaaaaaaaaaaaaaaaaaaa" "$DD/Other-aaaaaaaaaaaaaaaaaaaaaaaaaaaa" &&
+  plist "$DD/MyApp-gone" "$T/myapp-ios-ABC-7777/MyApp.xcworkspace" && plist "$DD/MyApp-live" "$W/MyApp.xcworkspace"
+jq -c '.devices["com.apple.CoreSimulator.SimRuntime.iOS-26-0"] += [
+  {"udid":"DDDDDDDD-0000-0000-0000-000000000004","name":"Duo-ABC-9999","state":"Booted","isAvailable":true},
+  {"udid":"77777777-0000-0000-0000-000000000007","name":"Duo-ABC-7777","state":"Shutdown","isAvailable":true}]' "$FX/simctl.json" > "$T/sims2.json"
+SW() { IOS_DERIVED_DATA_ROOT=$DD FAKE_SIMCTL_JSON=$T/sims2.json FAKE_XCRUN_LOG=$T/xcrun.log "$S/sweep.sh" "$@" 2>/dev/null; }
+rm -f "$T/xcrun.log"; OUT=$(SW --dry-run)
+ok "sweep --dry-run names the dead DerivedData and the orphan simulator, touches nothing" 'grep -q "would remove DerivedData MyApp-gone" <<<"$OUT" &&
+  grep -q "would remove DerivedData MyApp-aaaa" <<<"$OUT" && grep -q "would delete the simulators of ABC-7777" <<<"$OUT" && ! grep -q "ABC-9999\|MyApp-live" <<<"$OUT" &&
+  [ -d "$DD/MyApp-gone" ] && [ ! -s "$T/xcrun.log" ] && grep -q "^free: [0-9]* → [0-9]* GB$" <<<"$OUT"'
+OUT=$(SW)
+ok "sweep removes the dead DerivedData and the orphan ticket simulator, keeps the live ones and other projects" \
+  'grep -q "removed DerivedData MyApp-gone" <<<"$OUT" && grep -q "removed DerivedData MyApp-aaaa" <<<"$OUT" && grep -q "deleted simulator Duo-ABC-7777" <<<"$OUT" &&
+   [ ! -d "$DD/MyApp-gone" ] && [ ! -d "$DD/MyApp-aaaaaaaaaaaaaaaaaaaaaaaaaaaa" ] && [ -d "$DD/MyApp-live" ] && [ -d "$DD/$(xname "$W/MyApp.xcworkspace")" ] &&
+   [ -d "$DD/Other-aaaaaaaaaaaaaaaaaaaaaaaaaaaa" ] && grep -q "simctl delete 77777777" "$T/xcrun.log" && ! grep -q DDDDDDDD "$T/xcrun.log" && grep -q "simctl delete unavailable" "$T/xcrun.log"'
+ok "sweep with an unknown option is usage" '"$S/sweep.sh" --all 2>/dev/null; [ $? = 64 ]'
 gate() { G=$("$S/gate.sh" "$W" --logs "$SCR/gate" "$@" 2>/dev/null); GRC=$?; }
 gate; ok "gate without ios.sh is infra, never ok" '[ $GRC = 3 ] && grep -q "\"verdict\": \"infra\"" <<<"$G"'
 HOME=$NB gate; ok "gate without project.md is infra and names the file" '[ $GRC = 3 ] && grep -q "нет ~/.claude/ios-team/project.md" <<<"$G"'

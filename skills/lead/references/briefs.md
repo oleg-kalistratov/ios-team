@@ -43,6 +43,7 @@ skills_required: ios-testing:test-first, code-style-guidance, <every row of the 
 architect_decisions: <decisions[] from the architect result (type_or_file, layer, path, reuse, imports_allowed), or none>
 analytics_table: <Событие | Когда | Параметры from the analytics agent, or none>
 figma: <node link + the values to use (pt, colors, fonts), or «нет доступа — не угадывать, вернуть needs_decision»>
+defaults: <what the engineer decides itself and only reports in noticed: layout values Figma does not give (from the nearest component of the same screen), names of types and tests, which free simulator, the order of plan items; add the ticket's own, e.g. «обрезать по правой полосе Duo как в редакторе»; Oleg's earlier answers from the run log go into oleg_words, not here>
 docs: <repo docs to read; Confluence page ids only when an endpoint is wired (a Backend service page + the common Error page, from `~/.claude/ios-team/links.md`)>
 tests: <test targets and the -only-testing filters expected; a new target needs Project.swift + Workspace + both test plans>
 gate: gate.sh <worktree> --tests "<filter>" --base HEAD [--plan <nightly_test_plan>] --logs <scratch>/ios-engineer/<ticket>/gate   (the shape only — the agent has the script's full path in its own instructions; red: the new tests fail, run on the new and changed suites only; green: the targeted gate on the task's suites — `<Target>/<Suite>` filters, never a whole `<Target>`; the full suite runs in the PR's CI)
@@ -140,6 +141,7 @@ pr: <number>                                            (remove — the coordina
 owner_session: <this session's id — the uuid in your scratchpad path>   (remove)
 pilot_discard_ok: yes | no                              (remove of a pilot/* branch; yes only from Oleg's word)
 discard_files: <the exact paths Worktree listed and Oleg agreed to lose> | none   (remove; only after his explicit answer to that list)
+unmerged_ok: yes | no   (remove while the PR is still open: yes only when Oleg saw the PR state in your message and still said «удали»; otherwise the agent stops and asks)
 ref: <branch | sha | pull/<n>/head>  build: true|false  name: <short>  (scratch; the checkout goes under <scratch>/; build: true only for this repo's own branches or shas, never a PR head)
 ```
 Returns `worktree`, `branch`, `base`, `base_sha`. It never calls `ccd_*` tools, never deletes user files to make room, never moves untracked files — it lists them and stops.

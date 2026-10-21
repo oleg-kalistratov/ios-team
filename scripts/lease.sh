@@ -4,8 +4,10 @@
 #   lease.sh take sim <UDID>         break another session's simulator lease (guard-bash asks Oleg first)
 #   lease.sh take writer <worktree>  break a writer lease (e.g. an ios-engineer paused on needs_decision)
 #   lease.sh release <worktree>      drop every simulator and writer lease held from that worktree (worktree removal)
-#   lease.sh run heavy -- <cmd...>   run <cmd> holding one of 2 heavy units (cold builds, tests, tuist); prints the holders
-#                                    every 60 s while waiting, gives up after IOS_TEAM_HEAVY_WAIT s (default 2700 = 45 min)
+#   lease.sh run heavy -- <cmd...>   run <cmd> holding a heavy unit (cold builds, tests, tuist); IOS_TEAM_HEAVY_UNITS units,
+#                                    default 1: on a 16 GB Mac two xcodebuilds plus two simulators swap and both get slower
+#                                    than one after the other. Prints the holders every 60 s while waiting, gives up after
+#                                    IOS_TEAM_HEAVY_WAIT s (default 2700 = 45 min)
 # Exit: run -> the command's own code, 75 when no unit freed up in time; 64 usage.
 LEASES="$HOME/.claude/ios-team/leases"
 LIB="$(cd "$(dirname "$0")" && pwd)/lib"
@@ -24,7 +26,7 @@ holders() {
 }
 mkdir -p "$LEASES"; slot=""; start=$SECONDS; said=-999
 while [ -z "$slot" ]; do
-  for i in $(seq 0 $(( ${IOS_TEAM_HEAVY_UNITS:-2} - 1 ))); do
+  for i in $(seq 0 $(( ${IOS_TEAM_HEAVY_UNITS:-1} - 1 ))); do
     d="$LEASES/heavy-$i"
     if mkdir "$d" 2>/dev/null; then slot=$d; break; fi
     pid=$(cat "$d/pid" 2>/dev/null); hb=$(mtime "$d/heartbeat"); [ "$hb" = 0 ] && hb=$(mtime "$d")

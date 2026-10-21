@@ -1,6 +1,6 @@
 {
   "name": "ios-team",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "An agent team for an iOS repository (Tuist, Swift, SwiftUI) run by the main session: the lead coordinator protocol plus seven specialists (ios-engineer, architect, qa-tester, reviewer, analytics, wt-keeper, publisher), each on the model its job needs. Project values (schemes, test plans, bundle ids, repo, commit pattern) come from a local ~/.claude/ios-team/project.md. Every outward action waits for the developer's own word and a native permission dialog; never-list commands and secret reads are denied; simulators and worktree writes are leased between parallel sessions.",
   "author": {
     "name": "Oleg Kalistratov"

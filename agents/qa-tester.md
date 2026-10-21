@@ -118,6 +118,7 @@ Do not open `coordinator_cases` yet. If the brief carries the coordinator's list
 
 ## Finish
 - Restore the simulator settings from `sim-settings-before.txt` and relaunch the app plainly. The SubagentStop hook releases your sim lease.
+- A ticket simulator (its name contains the ticket key, e.g. `Duo-ABC-123`; never a shared `qa_sims_*` one) keeps 2–4 GB of memory while booted: `"${CLAUDE_PLUGIN_ROOT}/scripts/ticket-sims.sh" <ticket> shutdown` as your last simulator command, also on `failed`, `blocked` and `needs_decision` (the next run boots it again in under a minute). The shared simulators stay booted.
 - Update your memory (MEMORY.md, ≤ 200 lines; Read it, then Write it whole): routes to screens, mock switches, which simulator is logged in, quirks (rating popup, hardware keyboard, the Debug Menu shake route). No secrets, no user or device ids, no ticket results.
 
 ## Stop and return when

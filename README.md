@@ -263,8 +263,13 @@ State lives in `~/.claude/ios-team/leases/`.
   `scripts/lease.sh take sim <UDID>` takes it over after your click.
 - **Writer** — `ios-engineer` holds its worktree; edits from anyone else are denied until
   it returns.
-- **Heavy** — `scripts/lease.sh run heavy -- <cmd>`: two units for cold builds, tests and
-  `tuist generate`, heartbeat while the command runs, released on exit.
+- **Heavy** — `scripts/lease.sh run heavy -- <cmd>`: one unit (`IOS_TEAM_HEAVY_UNITS`) for cold
+  builds, tests and `tuist generate`, heartbeat while the command runs, released on exit. Parallel
+  sessions queue their builds: on a 16 GB Mac two xcodebuilds plus two simulators swap and both get
+  slower than one after the other.
+- **Ticket simulators** — `scripts/ticket-sims.sh <TICKET> list|shutdown|delete`: the simulators made
+  for one ticket (name contains the ticket key, never the shared `sim_prefix*` / `qa_sims_*` ones).
+  qa-tester shuts them down after a run; wt-keeper deletes them with the worktree.
 - **Disk** — `scripts/disk-check.sh <GB>` exits 3 below the threshold (10 GB before a
   worktree, 8 GB before a build); the agents stop and ask, nobody deletes anything to make
   room.
@@ -301,6 +306,17 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.2.7** — less load, fewer builds. The heavy lease has one unit by default (`IOS_TEAM_HEAVY_UNITS`): parallel
+sessions queue their builds instead of running two xcodebuilds plus two simulators into swap on a 16 GB Mac. New
+`scripts/ticket-sims.sh <TICKET> list|shutdown|delete`: qa-tester shuts a ticket's own simulator down after every run,
+wt-keeper deletes it in the same compound command as the worktree (the shared `sim_prefix*` / `qa_sims_*` ones are never
+matched). New `scripts/generate.sh <checkout>`: the full generate through `ios.sh generate` under the heavy lease, which
+records the fingerprint `ios.sh build` checks — after a raw `tuist generate` every later gate regenerated the project again
+(14 of 24 measured gates, 100–150 s each); the engineer and wt-keeper use it instead of raw tuist. The engineer's round is
+now red → green on the red filter → one targeted gate with the build; the separate widened `--no-build` run is gone (one
+test build of 3–5 min per round). guard-bash denies `until`/`while … sleep` loops and `sleep` of 60 s or more from any
+agent (one engineer waited 80 minutes that way in a week): long commands run in the background and are awaited with Monitor.
 
 **0.2.6** — bypass mode no longer shows any hook dialog: with `permission_mode: bypassPermissions` every
 `ask` from the hooks (including self-protection, unparsed or `$VAR` commands, commit-lint and arch-check findings and

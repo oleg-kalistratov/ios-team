@@ -976,12 +976,24 @@ def script_parts(argv):
     return payloads, file, not payloads and file in (None, "-")
 
 
+def is_own_source_checkout(folder):
+    """True for a source checkout of this plugin (its .claude-plugin/plugin.json names ios-team): the suite there quotes
+    never-list words on purpose, like the installed copy's."""
+    try:
+        with open(os.path.join(folder, ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
+            return json.load(f).get("name") == "ios-team"
+    except (OSError, ValueError):
+        return False
+
+
 def script_text(path, cwd, c):
     """Text of a script that lives in the repo, the main checkout or the session scratchpad (<= 64 KB), else None."""
     if not path or re.search(r"[$`*?]", path):
         return None
     p, root = os.path.realpath(absp(path, cwd)), git_root(os.path.realpath(cwd))
     if not c.agent and p == os.path.join(os.path.realpath(PLUGIN), "tests", "hooks.test.sh"):
+        return None
+    if not c.agent and p.endswith("/tests/hooks.test.sh") and is_own_source_checkout(os.path.dirname(os.path.dirname(p))):
         return None
     if not os.path.isfile(p) or not ((c.scratch and inside(p, c.scratch)) or (root and inside(p, root)) or inside(p, MAIN_REAL)):
         return None
@@ -1145,6 +1157,10 @@ def mode_bash(c):
         return deny("нет команды — проверить нельзя") if c.tool == "Bash" else None
     if re.search(r"disableallhooks", cmd, re.I):
         deny("disableAllHooks выключает все проверки — его не трогаем")
+    if c.tool == "Bash" and c.agent and (re.search(r"\b(until|while)\b.*\bsleep\b", cmd, re.S)
+                                         or any(int(n) >= 60 for n in re.findall(r"\bsleep\s+(\d+)", cmd))):
+        deny("ожидание в цикле или sleep от 60 с из агента запрещено (один инженер прождал так 80 минут за неделю) — "
+             "запусти долгую команду с run_in_background и жди её через Monitor")
     try:
         segs, _ = parse(cmd, c.cwd)
     except ValueError:

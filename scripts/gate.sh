@@ -1,6 +1,8 @@
 #!/bin/bash
 # gate.sh <worktree> [--tests <filter>]... [--plan <pr_test_plan>|<nightly_test_plan>] [--no-build] [--base <ref>] [--logs <dir>]
-# Verification gate for ios-engineer and the coordinator. Build (ios-dev ios.sh build --simulator) and tests run under
+# Verification gate for ios-engineer and the coordinator. Build (ios-dev ios.sh build --simulator; it regenerates the Tuist
+# project only when ios.sh's own fingerprint is missing or stale — generate with scripts/generate.sh, never raw tuist, or every
+# gate pays a second generate) and tests run under
 # `lease.sh run heavy`; tests via lib/test-run.sh (the CI plan and scheme, split into build-for-testing — skipped when the
 # source tree is unchanged since the last test build — and test-without-building; never the dev app scheme) on a
 # simulator nobody has leased, held for the run (lib/test-on-free-sim.sh); lint via ios.sh lint; scan-diff on the branch diff vs base.

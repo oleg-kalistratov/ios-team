@@ -539,7 +539,24 @@ ok "lease run heavy passes the exit code" '"$S/lease.sh" run heavy -- sh -c "exi
 mkdir -p "$L/heavy-0" "$L/heavy-1" && for i in 0 1; do echo $$ > "$L/heavy-$i/pid"; touch "$L/heavy-$i/heartbeat"; done
 ok "both heavy units busy -> 75" 'IOS_TEAM_HEAVY_WAIT=1 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>/dev/null; [ $? = 75 ]'
 echo 99999 > "$L/heavy-1/pid"
-ok "a dead holder is broken" 'IOS_TEAM_HEAVY_WAIT=3 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>/dev/null'
+ok "a dead holder is broken" 'IOS_TEAM_HEAVY_UNITS=2 IOS_TEAM_HEAVY_WAIT=3 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>/dev/null'
+rm -rf "$L"/heavy-*; mkdir -p "$L/heavy-0" && echo $$ > "$L/heavy-0/pid" && touch "$L/heavy-0/heartbeat"
+ok "heavy units default to 1: one live holder -> 75, IOS_TEAM_HEAVY_UNITS=2 opens a second" \
+  'IOS_TEAM_HEAVY_WAIT=1 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>/dev/null; [ $? = 75 ] &&
+   IOS_TEAM_HEAVY_UNITS=2 IOS_TEAM_HEAVY_WAIT=1 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>/dev/null'
+rm -rf "$L"/heavy-*
+TS=$T/sims.json; jq -c '.devices["com.apple.CoreSimulator.SimRuntime.iOS-26-0"] += [       # --- ticket simulators
+  {"udid":"DDDDDDDD-0000-0000-0000-000000000004","name":"Duo-ABC-9999","state":"Booted","isAvailable":true},
+  {"udid":"EEEEEEEE-0000-0000-0000-000000000005","name":"MyApp-Tests-ABC-9999","state":"Booted","isAvailable":true},
+  {"udid":"FFFFFFFF-0000-0000-0000-000000000006","name":"Duo-ABC-99991","state":"Shutdown","isAvailable":true}]' "$FX/simctl.json" > "$TS"
+ok "ticket-sims lists the ticket's own simulator only: not a sim_prefix one, not ABC-99991" \
+  '[ "$(FAKE_SIMCTL_JSON=$TS "$S/ticket-sims.sh" ABC-9999 list)" = "$(printf "DDDDDDDD-0000-0000-0000-000000000004\tDuo-ABC-9999\tBooted")" ]'
+ok "ticket-sims delete shuts the simulator down and deletes it, nothing else" 'rm -f "$T/xcrun.log"; FAKE_SIMCTL_JSON=$TS FAKE_XCRUN_LOG=$T/xcrun.log \
+  "$S/ticket-sims.sh" ABC-9999 delete | grep -q "Duo-ABC-9999.Deleted" && grep -q "simctl shutdown DDDDDDDD" "$T/xcrun.log" &&
+  grep -q "simctl delete DDDDDDDD" "$T/xcrun.log" && [ "$(wc -l < "$T/xcrun.log" | tr -d " ")" = 2 ]'
+ok "ticket-sims shutdown skips a shut-down simulator and reports it" 'rm -f "$T/xcrun.log"; FAKE_SIMCTL_JSON=$TS FAKE_XCRUN_LOG=$T/xcrun.log \
+  "$S/ticket-sims.sh" ABC-99991 shutdown | grep -q "Duo-ABC-99991.Shutdown" && [ ! -s "$T/xcrun.log" ]'
+ok "ticket-sims without a ticket key or with an unknown action is usage" '"$S/ticket-sims.sh" bad list 2>/dev/null; [ $? = 64 ] && "$S/ticket-sims.sh" ABC-1 erase 2>/dev/null; [ $? = 64 ]'
 gate() { G=$("$S/gate.sh" "$W" --logs "$SCR/gate" "$@" 2>/dev/null); GRC=$?; }
 gate; ok "gate without ios.sh is infra, never ok" '[ $GRC = 3 ] && grep -q "\"verdict\": \"infra\"" <<<"$G"'
 HOME=$NB gate; ok "gate without project.md is infra and names the file" '[ $GRC = 3 ] && grep -q "нет ~/.claude/ios-team/project.md" <<<"$G"'
@@ -570,6 +587,12 @@ FAKE_IOS_FAIL=lint gate --no-build; ok "--no-build skips lint too" '[ $GRC = 0 ]
 FAKE_IOS_FAIL=lint gate; ok "lint still runs with a build" '[ $GRC = 1 ] && grep -q "\"verdict\": \"lint\"" <<<"$G"'
 check allow guard-bash.sh "$(B "\"$S/gate.sh\" $W --tests FooTests" "$W" "$E")"
 G=$("$S/gate.sh" "$W" 2>/dev/null); ok "gate logs default to the scratchpad guard-bash remembered" 'grep -q "\"tests\": \"$SCR/gate/myapp-ios-ABC-9999/" <<<"$G"'
+ok "generate.sh runs ios.sh generate and leaves no heavy lease behind" '"$S/generate.sh" "$W" 2>/dev/null | grep -q "fake generate ok" && ! ls -d "$L"/heavy-* 2>/dev/null'
+ok "generate.sh refuses a folder that is not a checkout (exit 3) and a missing argument (64)" '"$S/generate.sh" "$T/other" 2>/dev/null; [ $? = 3 ] && "$S/generate.sh" 2>/dev/null; [ $? = 64 ]'
+check allow guard-bash.sh "$(B "\"$S/generate.sh\" $W > $SCR/gen.out 2>&1; echo \"exit=\$?\" >> $SCR/gen.out" "$W" "$E")"
+b deny guard-bash.sh 'until grep -q verdict out.json; do sleep 15; done' "$W" "$E" "Monitor"   # --- waiting loops: Monitor, not Bash
+b deny guard-bash.sh 'sleep 600' "$W" ios-team:qa-tester "Monitor"
+b allow guard-bash.sh 'sleep 2' "$W" ios-team:qa-tester
 mkdir -p "$L/heavy-0" "$L/heavy-1" && for i in 0 1; do echo $$ > "$L/heavy-$i/pid"; touch "$L/heavy-$i/heartbeat"; done
 ok "heavy wait defaults to 45 min and reports progress" 'grep -q "IOS_TEAM_HEAVY_WAIT:-2700" "$S/lease.sh" &&
   IOS_TEAM_HEAVY_WAIT=1 IOS_TEAM_HEAVY_POLL=1 "$S/lease.sh" run heavy -- true 2>&1 | grep -q "жду тяжёлый слот 0 из 0 мин"'

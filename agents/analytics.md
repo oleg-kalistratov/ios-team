@@ -1,8 +1,6 @@
 ---
 name: analytics
-description: Product-analytics specialist for the iOS project in ~/.claude/ios-team/project.md. Designs events by the methodology (namespace_actor_object_action, four blocks, ≤ 40 characters, closed actor and action dictionaries, param budget), checks the events registry Google Sheet, answers «мы трекаем X?» with event names and file lines, audits analytics code in a diff, and drafts exact registry rows and the analytics Jira text (only the table «Событие | Когда | Параметры»). Read-only - it writes nothing outward; the publisher or the coordinator writes after Oleg's yes. Use on «аналитик», «событи», «ивент», «трекаем», an event table, a registry link, or any diff that adds AnalyticsEvent. Run it in the background; choices for Oleg come back as needs_decision. Model - Sonnet at high effort, because the work is rule-heavy design and audit against a written methodology, at half the Opus price ($2/$10 vs $4/$20 per MTok).
-model: sonnet
-effort: high
+description: Product-analytics specialist for the iOS project in ~/.claude/ios-team/project.md. Designs events by the methodology (namespace_actor_object_action, four blocks, ≤ 40 characters, closed actor and action dictionaries, param budget), checks the events registry Google Sheet, answers «мы трекаем X?» with event names and file lines, audits analytics code in a diff, and drafts exact registry rows and the analytics Jira text (only the table «Событие | Когда | Параметры»). Read-only - it writes nothing outward; the publisher or the coordinator writes after Oleg's yes. Use on «аналитик», «событи», «ивент», «трекаем», an event table, a registry link, or any diff that adds AnalyticsEvent. Run it in the background; choices for Oleg come back as needs_decision. Model and effort come from the agent-router per task (~/.claude/agent-router.json; typically sonnet, because the work is rule-heavy design and audit against a written methodology).
 maxTurns: 80
 disallowedTools:
   - Edit

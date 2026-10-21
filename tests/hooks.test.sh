@@ -492,6 +492,22 @@ check deny agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer $'route: sonnet 
 check deny agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer $'route: opus high — x\nticket: ABC-1' opus low)" "effort high"
 check ask agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer $'route: fable xhigh — Metal-рендер\nticket: ABC-1' fable xhigh)" "Fable для ios-engineer.*Metal"
 check allow agent-spawn-guard.sh "$(spawnr Explore 'map the code' sonnet)"
+check allow agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer $'route: auto — отступы на Duo\nticket: ABC-1')"       # --- route: auto → the agent-router decides
+check deny agent-spawn-guard.sh "$(spawnr ios-team:ios-engineer $'route: auto — x\nticket: ABC-1' opus high)" "drop them"
+IH=index-hint.sh IDX="$("$S/lib/run.sh" derived-data "$W/MyApp.xcworkspace")/Index.noindex/DataStore"   # --- index hint: once per agent, only with an index
+j allow $IH Grep '{"pattern":"CaptionToolbar"}' "$W" ios-team:ios-engineer                                # plugin not enabled in this HOME
+printf '{"enabledPlugins": {"swift-code-index@swift-code-index": true}}\n' > "$HOME/.claude/settings.json"
+j allow $IH Grep '{"pattern":"CaptionToolbar"}' "$W" ios-team:ios-engineer                                # no index store yet
+mkdir -p "$IDX"
+j deny $IH Grep '{"pattern":"CaptionToolbar"}' "$W" ios-team:ios-engineer "loadIndex.*searchSymbol"
+j allow $IH Grep '{"pattern":"CaptionToolbar"}' "$W" ios-team:ios-engineer                                # second time passes
+j deny $IH Grep '{"pattern":"func makeToolbar","glob":"*.swift"}' "$W" ios-team:reviewer "symbolsInFile"  # another agent: its own reminder
+j allow $IH Grep '{"pattern":"не удалось загрузить"}' "$W" ios-team:qa-tester                             # a string, not a symbol
+j allow $IH Grep '{"pattern":"CaptionToolbar","glob":"*.xcstrings"}' "$W" ios-team:qa-tester              # not Swift files
+b deny $IH 'grep -rn "CaptionToolbar" Modules/FooFeature/Sources' "$W" "" "getOccurrences"                 # the main session, through Bash, once
+b allow $IH 'grep -rn "CaptionToolbar" Modules/FooFeature/Sources' "$W"
+b allow $IH 'grep -n "error:" build.log' "$W" ios-team:qa-tester
+rm -f "$HOME/.claude/settings.json"
 
 check allow subagent-stop.sh "$(EV $WK S7 $'```result\nagent: wt-keeper\nstatus: needs_decision\n```')"
 check deny agent-spawn-guard.sh "$(spawn $WK S7)" "SendMessage.*id-ios-team:wt-keeper"

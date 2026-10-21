@@ -309,6 +309,22 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.3.0** — a shorter pipeline, and the two helper plugins actually in use. The lead classes every change S / M / L from the
+diff (≤ ~150 lines in one module → engineer, gate, publisher, QA only for visible UI; up to ~400 lines or two modules → one
+review and one QA pass; Frameworks/, Project.swift, engine, navigation, money → the full path), repeats no full pass after a fix
+round (QA reruns the failed cases, the reviewer re-checks its own findings), spawns Explore only for class L, and ships push +
+PR + the Jira step through one publisher run (`mode: ship`). **Breaking for briefs:** the route line is now `route: auto — <what
+the task is>` and the Agent call carries no `model` or `effort`; the agent-router plugin decides from `~/.claude/agent-router.json`
+(copy `agent-router.example.json` there: engine → opus xhigh, shared layers / navigation / money / concurrency → opus high,
+mechanical and layout-only engineer work → sonnet medium, qa-tester / reviewer / analytics → sonnet, wt-keeper and publisher keep
+their own models). The agents' frontmatter no longer pins a model, so the router's choice applies; a hand-written
+`route: <model> <effort>` with the matching call is still accepted when Oleg named the model. Why: a week of spawn logs showed the
+router routing nothing — every brief carried a hand-written route line it had to keep. For the swift-code-index plugin: the
+SubagentStart context now states whether the checkout's Xcode index exists, with the exact `loadIndex` call, and the new
+`index-hint.sh` hook (PreToolUse Grep|Bash) stops the first grep for a Swift symbol once per agent or main session when the index
+exists, naming the index tools; strings, logs, `.xcstrings` and `Project.swift` greps never match (measured: 3 index calls
+against 42 symbol greps in a week).
+
 **0.2.8** — fewer stops with a question (measured over a week: 161 of 503 agent stops ended in a question or a block,
 and 70–83 % of a ticket's wall-clock was agents waiting for the answer). New `scripts/sweep.sh`: DerivedData of worktrees
 that no longer exist (by `info.plist` or by Xcode's path hash for the nameless package-resolution leftovers), simulators of

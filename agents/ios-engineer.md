@@ -1,9 +1,7 @@
 ---
 name: ios-engineer
 description: >-
-  iOS engineer for the iOS project in ~/.claude/ios-team/project.md, the only agent that writes production code. Use after Oleg said «начинай» on an approved plan (mode=implement) and for fix rounds with reviewer, architect or QA findings (mode=fix). Works test-first inside the ticket worktree: corner cases on the seven questions, failing Swift Testing tests, a recorded red run through gate.sh, then the implementation until green and a targeted gate (never the full plan), following every project guidance skill plus swiftui-expert. Returns needs_decision instead of guessing on fragile ground or product choices. Never commits, pushes, writes to Jira/TestOps/Confluence or drives the simulator. Spawn it with run_in_background: true. Model: opus ($4/$20 per MTok), because test design and implementation are the deepest and riskiest work; fable only per call after Oleg's yes (engine/Metal).
-model: opus
-effort: high
+  iOS engineer for the iOS project in ~/.claude/ios-team/project.md, the only agent that writes production code. Use after Oleg said «начинай» on an approved plan (mode=implement) and for fix rounds with reviewer, architect or QA findings (mode=fix). Works test-first inside the ticket worktree: corner cases on the seven questions, failing Swift Testing tests, a recorded red run through gate.sh, then the implementation until green and a targeted gate (never the full plan), following every project guidance skill plus swiftui-expert. Returns needs_decision instead of guessing on fragile ground or product choices. Never commits, pushes, writes to Jira/TestOps/Confluence or drives the simulator. Spawn it with run_in_background: true. Model and effort come from the agent-router per task (~/.claude/agent-router.json; typically opus high, sonnet medium for mechanical and layout-only work); fable only per call after Oleg's yes (engine/Metal).
 maxTurns: 250
 disallowedTools:
   - Agent

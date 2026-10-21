@@ -1,0 +1,20 @@
+{
+  "language": "ru",
+  "max_model": "opus",
+  "rules": [
+    { "name": "wt-keeper keeps haiku", "match": { "type": "ios-team:wt-keeper" }, "abstain": true },
+    { "name": "publisher keeps sonnet medium", "match": { "type": "ios-team:publisher" }, "abstain": true },
+    { "name": "engine, render, export, Metal", "match": { "regex": "(?<![\\p{L}\\p{N}])(Metal|render\\w*|export\\w*|shader\\w*|LUT|caption\\w*|движ\\p{L}*|рендер\\p{L}*|экспорт\\p{L}*|шейдер\\p{L}*|композиц\\p{L}*)(?![\\p{L}\\p{N}])" }, "tier": "deep" },
+    { "name": "shared layers, navigation, money, concurrency, migrations, unknown cause", "match": { "regex": "Frameworks/|Project\\.swift|(?<![\\p{L}\\p{N}])(навигац\\p{L}*|deeplink\\w*|диплинк\\p{L}*|подписк\\p{L}*|оплат\\p{L}*|деньг\\p{L}*|платеж\\p{L}*|concurren\\w*|race|гонк\\p{L}*|миграц\\p{L}*|keychain|persist\\w*|хранилищ\\p{L}*|причина неизвестна|root cause|flaky|утечк\\p{L}*)(?![\\p{L}\\p{N}])" }, "tier": "risky" },
+    { "name": "engineer: mechanical and layout-only work on sonnet", "match": { "type": "ios-team:ios-engineer", "regex": "(?<![\\p{L}\\p{N}])(Duo|отступ\\p{L}*|layout|вёрстк\\p{L}*|верстк\\p{L}*|размер\\p{L}*|ширин\\p{L}*|шрифт\\p{L}*|цвет\\p{L}*|копирайт\\p{L}*|переимен\\p{L}*|rename|механ\\p{L}*|mechanical)(?![\\p{L}\\p{N}])" }, "tier": "ordinary" },
+    { "name": "engineer default", "match": { "type": "ios-team:ios-engineer" }, "tier": "risky" },
+    { "name": "architect default", "match": { "type": "ios-team:architect" }, "tier": "risky" },
+    { "default": true, "auto": true }
+  ],
+  "types": {
+    "ios-team:qa-tester": { "tier": "ordinary" },
+    "ios-team:reviewer": { "tier": "ordinary" },
+    "ios-team:analytics": { "tier": "ordinary" }
+  },
+  "escalate": { "enabled": true, "after": { "error": 1, "check": 2 }, "window_min": 60 }
+}

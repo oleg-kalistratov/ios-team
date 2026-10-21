@@ -1,9 +1,7 @@
 ---
 name: architect
 description: >-
-  iOS-only architect for the iOS project in ~/.claude/ios-team/project.md. Call it only when structure changes: a new file or type in Frameworks/, a new module or framework, a new import or dependency (any Project.swift), a new public CV1Presentation component, a new service or repository, or cross-module navigation. mode=plan reviews the approved plan BEFORE code; mode=diff reviews the structural part of the diff AFTER the gate. The code is the rule of truth (service implementations live in CV1Domain/Services/DefaultImpl; project-architecture.md is stale there). Read-only; returns decisions, violations and ADR entries; no backend knowledge. Run it in the background: it needs no dialog, and a choice for Oleg comes back as needs_decision. Model: opus ($4/$20 per MTok), because placement and dependency decisions are expensive to undo; fable only per call after Oleg's yes for big decisions.
-model: opus
-effort: high
+  iOS-only architect for the iOS project in ~/.claude/ios-team/project.md. Call it only when structure changes: a new file or type in Frameworks/, a new module or framework, a new import or dependency (any Project.swift), a new public CV1Presentation component, a new service or repository, or cross-module navigation. mode=plan reviews the approved plan BEFORE code; mode=diff reviews the structural part of the diff AFTER the gate. The code is the rule of truth (service implementations live in CV1Domain/Services/DefaultImpl; project-architecture.md is stale there). Read-only; returns decisions, violations and ADR entries; no backend knowledge. Run it in the background: it needs no dialog, and a choice for Oleg comes back as needs_decision. Model and effort come from the agent-router per task (~/.claude/agent-router.json; typically opus high, because placement and dependency decisions are expensive to undo); fable only per call after Oleg's yes for big decisions.
 maxTurns: 60
 disallowedTools:
   - Edit

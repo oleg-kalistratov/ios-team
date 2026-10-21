@@ -1769,10 +1769,68 @@ def mode_substart(c):
                                                     % (cur.get("agent_id"), hhmm(cur.get("acquired")))))
     elif c.role == ENGINEER:
         lines.append("- writer lease: taken on your first Edit/Write in the worktree you edit")
+    if root and index_enabled():
+        store, ws = index_store(root), project_value("workspace")
+        lines.append("- Xcode index of this checkout: %s" % (
+            "EXISTS — symbols (definitions, callers, conformances, overrides, file outlines) go through it: first loadIndex with workspacePath: %s/%s, "
+            "then searchSymbol / getOccurrences / findImplementations / symbolsInFile; grep only for strings, logs, .xcstrings and Project.swift "
+            "(the first grep for a Swift symbol is stopped once as a reminder)" % (root, ws) if store else
+            "none yet (not built here) — grep as usual; after the first gate build, loadIndex with workspacePath: %s/%s works" % (root, ws)))
     lines += ["- helpers: %s/scripts/ gate.sh, lease.sh, disk-check.sh, scan-diff.sh, arch-check.sh" % PLUGIN,
               "- end with exactly one ```result block: agent, status: ok|failed|blocked|needs_decision, summary, artifacts, verification, "
               "not_verified, needs_decision, noticed, next_suggested + your role fields"]
     say({"hookSpecificOutput": {"hookEventName": "SubagentStart", "additionalContext": "\n".join(lines)}})
+
+
+def index_enabled():
+    """The swift-code-index plugin is enabled for this user, so its MCP tools exist in every session and agent."""
+    try:
+        with open(os.path.join(HOME, ".claude", "settings.json"), encoding="utf-8") as f:
+            return bool((json.load(f).get("enabledPlugins") or {}).get("swift-code-index@swift-code-index"))
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def index_store(root):
+    """The Xcode index store of a checkout (DerivedData/<Workspace>-<hash>/Index.noindex/DataStore), or '' when it was never built."""
+    ws = project_value("workspace")
+    if not root or not ws:
+        return ""
+    p = os.path.join(xcode_derived_data(os.path.join(root, ws)), "Index.noindex", "DataStore")
+    return p if os.path.isdir(p) else ""
+
+
+SYMBOL = re.compile(r"^(?:func|class|struct|protocol|enum|actor|extension|var|let)\s+\w+|^[A-Z][A-Za-z0-9_]{3,}(?:\(|$)")
+BASH_SYMBOL_GREP = re.compile(r"\b(?:grep|rg)\b(?:\s+-{1,2}[\w=.*'\"-]+)*\s+(?:-e\s+)?['\"]?((?:func|class|struct|protocol|enum)\s+\w+|[A-Z][A-Za-z0-9_]{3,})['\"]?(?=\s|$)")
+
+
+def mode_indexhint(c):
+    """PreToolUse Grep|Bash: the first grep for a Swift symbol in a checkout whose Xcode index exists is stopped once per agent (or per main
+    session) with the index tools named; the retry goes through. Strings, logs and lowercase words never match."""
+    if not index_enabled():
+        return
+    if c.tool == "Grep":
+        glob_, typ = str(c.inp.get("glob") or ""), str(c.inp.get("type") or "")
+        if not (((not glob_ and not typ) or "swift" in glob_ or typ == "swift") and SYMBOL.search(str(c.inp.get("pattern") or ""))):
+            return
+    elif c.tool == "Bash":
+        cmd = str(c.inp.get("command") or "")
+        if not (BASH_SYMBOL_GREP.search(cmd) and re.search(r"\.swift\b|/(?:Modules|Frameworks|Sources)\b", cmd)):
+            return
+    else:
+        return
+    root = git_root(os.path.realpath(c.cwd))
+    store = index_store(root)
+    if not store:
+        return
+    marker = os.path.join(STATE, "index-hint-%s-%s" % (re.sub(r"[^\w.-]", "_", c.session or "nosession"), re.sub(r"[^\w.-]", "_", c.agent or "main")))
+    if os.path.exists(marker):
+        return
+    os.makedirs(STATE, exist_ok=True)
+    write_json(marker, {"at": time.time(), "tool": c.tool})
+    deny("для символов Swift есть индекс Xcode этого чекаута (%s): loadIndex с workspacePath: %s/%s, затем searchSymbol / getOccurrences / "
+         "findImplementations / symbolsInFile — точнее и дешевле grep. grep оставь строкам, логам, .xcstrings и Project.swift. Это напоминание "
+         "один раз: если искал не символ — повтори ту же команду, второй раз она пройдёт" % (store, root, project_value("workspace")))
 
 
 def last_status(msg):
@@ -1848,7 +1906,7 @@ def note_waiting(c, status, questions=()):
         os.remove(p)
 
 
-ROUTE = re.compile(r"^\s*route:\s*(haiku|sonnet|opus|fable)\b[ \t]*(low|medium|high|xhigh|max)?\b[ \t]*(?:[—–-]+)?(.*)$", re.I | re.M)
+ROUTE = re.compile(r"^\s*route:\s*(auto|haiku|sonnet|opus|fable)\b[ \t]*(low|medium|high|xhigh|max)?\b[ \t]*(?:[—–-]+)?(.*)$", re.I | re.M)
 
 
 def mode_agentspawn(c):
@@ -1864,6 +1922,11 @@ def mode_agentspawn(c):
         deny("the brief of %s has no route line: start the prompt with «route: <model> <effort> — <why>» and pass the same model and effort "
              "(lead §6 router)" % role)
     model, effort = str(c.inp.get("model") or "").lower(), str(c.inp.get("effort") or "").lower()
+    if m.group(1).lower() == "auto":
+        if model or effort:
+            deny("route: auto leaves model and effort to the agent-router — drop them from the Agent call, or write «route: <model> <effort>» "
+                 "when Oleg named the model")
+        return
     if model and model != m.group(1).lower():
         deny("route says %s but the Agent call passes model %s — make them match" % (m.group(1), model))
     if effort and m.group(2) and effort != m.group(2).lower():
@@ -2004,7 +2067,8 @@ def mode_prepass(args):
 
 HOOKS = {"secrets": (mode_secrets, True), "bash": (mode_bash, True), "mcp": (mode_mcp, True), "commit": (mode_commit, False), "sim": (mode_sim, False),
          "writer": (mode_writer, True), "substart": (mode_substart, False), "substop": (mode_substop, False), "sessend": (mode_sessend, False),
-         "agentspawn": (mode_agentspawn, False), "asked": (mode_asked, False), "stopcheck": (mode_stopcheck, False)}
+         "agentspawn": (mode_agentspawn, False), "asked": (mode_asked, False), "stopcheck": (mode_stopcheck, False),
+         "indexhint": (mode_indexhint, False)}
 HELPERS = {"lease-status": mode_lease_status, "lease-take": mode_lease_take, "prepass": mode_prepass, "scan": lambda a: mode_diffcheck("scan", a),
            "sim-pick": mode_sim_pick, "lease-release": mode_lease_release,
            "lease-release-worktree": mode_lease_release_worktree,

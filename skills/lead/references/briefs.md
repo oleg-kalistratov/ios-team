@@ -7,7 +7,7 @@ Field names are by meaning: when an agent's own prompt names a field differently
 Every brief starts with the common header:
 
 ```
-route: <model> <effort> — <one Russian line why: mechanical / ordinary / risky / engine, and the escalation if any>
+route: auto — <one Russian line: what the task is (area, mechanical / ordinary / risky / engine), and the escalation if any; the agent-router turns it into the model and effort — pass none yourself unless Oleg named the model>
 ticket: ABC-123 | branch: <type>/ABC-123 | base: <base as Oleg named it> | worktree: <abs path or none> | main: <abs main checkout>
 scratch: <your session scratchpad dir> | deadline_min: <n>
 ```
@@ -152,7 +152,8 @@ Spawn only after Oleg's word; quote it. One outward action per word; the dialog 
 
 ```
 <common header>
-mode: push | pr_create | pr_edit | pr_body_draft | ci_status | jira_create | jira_edit | jira_comment | jira_transition | jira_draft | confluence_update | confluence_create | testops_link
+mode: push | pr_create | ship | pr_edit | pr_body_draft | ci_status | jira_create | jira_edit | jira_comment | jira_transition | jira_draft | confluence_update | confluence_create | testops_link
+   (ship = pr_create + the Jira step from `jira.target_status` / `jira.comment`, when Oleg's word covered both — one spawn instead of three)
 oleg_word: «<his exact word>»   (every write mode; without it the publisher only drafts)
 pilot: true | false             (a replay of merged work, e.g. pilot/ABC-123: dry run, no outward write)
 ticketless_ok: yes | no         (a branch without a ticket key: Oleg's recorded choice)

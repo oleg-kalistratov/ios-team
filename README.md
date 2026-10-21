@@ -309,6 +309,13 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.3.1** — a cheaper tester. qa-tester drives through the accessibility tree first (`sim.sh ui`, `tap-label`, `wait-label` /
+`wait-gone` / `wait-stable`; idb is installed on the dev Mac now — the prompt said it was not), takes screenshots as evidence after
+transitions rather than before every tap, never sleeps longer than 2 s, and falls back to the simulator MCP with the
+fresh-screenshot rule only when idb is unavailable (measured: 984 screenshots and 461 sleeps in 7 runs). The lead passes
+`scope: small` for class S and M, `normal` only for class L or «проверь все полностью», and `baseline` / `compare` only on Oleg's
+«сравни до и после».
+
 **0.3.0** — a shorter pipeline, and the two helper plugins actually in use. The lead classes every change S / M / L from the
 diff (≤ ~150 lines in one module → engineer, gate, publisher, QA only for visible UI; up to ~400 lines or two modules → one
 review and one QA pass; Frameworks/, Project.swift, engine, navigation, money → the full path), repeats no full pass after a fix

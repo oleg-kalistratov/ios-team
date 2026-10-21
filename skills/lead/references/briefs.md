@@ -77,8 +77,8 @@ It derives its own corner cases first and only then reads yours — so put your 
 
 ```
 <common header>
-mode: verify | full | baseline | compare | rerun
-scope: small | normal   (small: one behaviour in a few files — coordinator cases + ≤3 own, ~15 min)
+mode: verify | full | baseline | compare | rerun   (baseline / compare only on Oleg's «сравни до и после»; rerun after a fix round: only rerun_ids)
+scope: small | normal   (small: class S and M — coordinator cases + ≤3 own, ~15 min; normal: class L or «проверь все полностью»)
 what_changed_ru: <plain description of the user-visible change>
 ticket_text: <Jira summary + acceptance criteria verbatim, + Oleg's later words that override them>
 figma: <node link + key values (pt, colors, fonts), or «нет доступа»>

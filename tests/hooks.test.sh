@@ -406,6 +406,8 @@ sim allow '{"action":"tap","device":"iPhone 17 Pro"}' "$W" S1
 ok "lease directory created" '[ -f "$L/sim-$A/owner.json" ]'
 sim allow '{"action":"screenshot"}' "$W" S1
 sim deny '{"action":"tap","udid":"'$A'"}' "$R" S2 "" "Симулятор iPhone 17 Pro занят сессией feature/ABC-9999"
+C=CCCCCCCC-0000-0000-0000-000000000003; check allow $X "$(B "xcrun simctl bootstatus $C -b" "$R" "" S2)"   # busy -> the next one of the set
+ok "a session denied one simulator leases the next one" '[ "$(jq -r .session_id "$L/sim-$C/owner.json")" = S2 ]'; rm -rf "$L/sim-$C"
 check deny $X "$(B 'xcrun simctl io booted screenshot /tmp/x.png' "$R" "" S3)"
 check allow $X "$(B 'xcrun simctl list devices' "$R" "" S3)"
 python3 -c "import json,sys; p=sys.argv[1]; o=json.load(open(p)); o['heartbeat']=0; json.dump(o,open(p,'w'))" "$L/sim-$A/owner.json"

@@ -267,9 +267,12 @@ State lives in `~/.claude/ios-team/leases/`.
   builds, tests and `tuist generate`, heartbeat while the command runs, released on exit. Parallel
   sessions queue their builds: on a 16 GB Mac two xcodebuilds plus two simulators swap and both get
   slower than one after the other.
-- **Ticket simulators** — `scripts/ticket-sims.sh <TICKET> list|shutdown|delete`: the simulators made
-  for one ticket (name contains the ticket key, never the shared `sim_prefix*` / `qa_sims_*` ones).
-  qa-tester shuts them down after a run; wt-keeper deletes them with the worktree.
+- **QA simulators** — only the existing `qa_sims_dev` / `qa_sims_prod` from project.md; nothing
+  creates a simulator. The brief's simulator is a preference: when another session holds it,
+  qa-tester moves to the next free one of the same device class, first in its flavor's set, then in
+  the other set, and names the one it used. All of them held → it asks «подождать / забрать».
+  Copies made per ticket by 0.3.1 and earlier (`Duo-ABC-123`) are deleted by `scripts/sweep.sh`
+  once their worktree is gone (`scripts/ticket-sims.sh <TICKET> list|shutdown|delete` by hand).
 - **Disk** — `scripts/disk-check.sh <GB>` exits 3 below the threshold (10 GB before a
   worktree, 8 GB before a build). Below it the agents first run `scripts/sweep.sh` — DerivedData
   whose worktree no longer exists, simulators of tickets without a worktree, simulators without
@@ -308,6 +311,13 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.3.2** — existing simulators only. The lead no longer creates a per-ticket copy (`Duo-ABC-123`) when the shared simulator
+is busy: it puts the first free one of `qa_sims_dev` / `qa_sims_prod` in the brief and grants the device permission on that one.
+qa-tester treats the brief's simulator as a preference — on a «занят» deny from sim-lease it moves on its own to the next free
+simulator of the same device class, then to the other set (a dev build next to the prod app, never touching it), and names the
+one it used; `needs_decision` only when every one is held. wt-keeper's removal no longer calls `ticket-sims.sh`; `sweep.sh` still
+deletes copies left by earlier versions.
 
 **0.3.1** — a cheaper tester. qa-tester drives through the accessibility tree first (`sim.sh ui`, `tap-label`, `wait-label` /
 `wait-gone` / `wait-stable`; idb is installed on the dev Mac now — the prompt said it was not), takes screenshots as evidence after

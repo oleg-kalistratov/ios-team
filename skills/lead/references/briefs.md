@@ -7,7 +7,7 @@ Field names are by meaning: when an agent's own prompt names a field differently
 Every brief starts with the common header:
 
 ```
-route: auto — <one Russian line: what the task is (area, mechanical / ordinary / risky / engine), and the escalation if any; the agent-router turns it into the model and effort — pass none yourself unless Oleg named the model>
+route: auto — класс <S|M|L>[, движок]: <one Russian line: what the task is, and the escalation if any>   (the agent-router keys on the class token: S → sonnet medium, M → opus medium, L → opus high, движок → opus xhigh; qa-tester, reviewer, analytics always sonnet medium — pass no model or effort yourself unless Oleg named the model)
 ticket: ABC-123 | branch: <type>/ABC-123 | base: <base as Oleg named it> | worktree: <abs path or none> | main: <abs main checkout>
 scratch: <your session scratchpad dir> | deadline_min: <n>
 ```

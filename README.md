@@ -312,6 +312,16 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.3.3** — two fixes from the first measurement after 0.3.0 (10 tickets). The router config keyed on words in the brief,
+and «Frameworks/», «Project.swift», «export», «caption» appear in almost every brief (`not_in_scope`, `fragile_ground`, Figma
+values), so qa-tester, reviewer and the engineer ran on opus xhigh for two days ($135–158 per ticket against a $4 median
+before). `agent-router.example.json` now keys only on the class token the lead writes in the route line — `route: auto — класс
+S|M|L[, движок]: …` — S → sonnet medium, M → opus medium, L → opus high, движок → opus xhigh; qa-tester, reviewer and analytics
+are forced to sonnet medium; the architect opus high. Copy it over `~/.claude/agent-router.json` again. And wt-keeper still
+returned «tuist ещё идёт» as blocked: the Monitor tool returns at once, the turn ends with nothing to do, the stop hook asks for
+a result block. New `scripts/wait-for.sh <file> <regex> [max_s]` blocks in the foreground until the line appears (exit 0) or 9
+minutes passed (exit 124: call again); wt-keeper and ios-engineer wait with it instead of Monitor.
+
 **0.3.2** — existing simulators only. The lead no longer creates a per-ticket copy (`Duo-ABC-123`) when the shared simulator
 is busy: it puts the first free one of `qa_sims_dev` / `qa_sims_prod` in the brief and grants the device permission on that one.
 qa-tester treats the brief's simulator as a preference — on a «занят» deny from sim-lease it moves on its own to the next free

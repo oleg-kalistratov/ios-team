@@ -26,7 +26,7 @@ dev_url_scheme: myapp-test
 sim_prefix: MyApp-Tests
 # Scheme of the production flavor (ios.sh --prod). The qa-tester uses it only for subscription cases, which do not work on the dev flavor.
 prod_scheme: MyApp
-# Fixed simulators every session shares (comma-separated names), one set per flavor so each keeps its own login; the qa-tester picks a free one by device class and never creates or deletes simulators. Name the dev set with sim_prefix so gate.sh runs tests there. Empty: any free iPhone.
+# Fixed simulators every session shares (comma-separated names), one set per flavor so each keeps its own login; the qa-tester picks a free one by device class, creates one only when no existing simulator fits the device class, never deletes. The lists must name simulators that exist on this Mac. Name the dev set with sim_prefix so gate.sh runs tests there. Empty: any free iPhone.
 qa_sims_dev: MyApp-Tests-0, MyApp-Tests-Foldable
 qa_sims_prod: MyApp-Prod-0, MyApp-Prod-1
 # Name of the environment variable the repo's Scripts/test.sh reads for its DerivedData path; gate.sh sets it per worktree.

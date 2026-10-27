@@ -267,8 +267,9 @@ State lives in `~/.claude/ios-team/leases/`.
   builds, tests and `tuist generate`, heartbeat while the command runs, released on exit. Parallel
   sessions queue their builds: on a 16 GB Mac two xcodebuilds plus two simulators swap and both get
   slower than one after the other.
-- **QA simulators** — only the existing `qa_sims_dev` / `qa_sims_prod` from project.md; nothing
-  creates a simulator. The brief's simulator is a preference: when another session holds it,
+- **QA simulators** — the existing `qa_sims_dev` / `qa_sims_prod` from project.md (the Mac's
+  simulator list is the truth; empty sets mean any existing simulator); a new one is created only
+  when no existing simulator fits the device class, and the report says so. The brief's simulator is a preference: when another session holds it,
   qa-tester moves to the next free one of the same device class, first in its flavor's set, then in
   the other set, and names the one it used. All of them held → it asks «подождать / забрать».
   Copies made per ticket by 0.3.1 and earlier (`Duo-ABC-123`) are deleted by `scripts/sweep.sh`
@@ -311,6 +312,11 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.3.4** — simulators that exist, or a new one. `qa_sims_dev` / `qa_sims_prod` must name simulators that exist on the Mac
+(`xcrun simctl list devices available` is the truth; empty sets mean any existing simulator); when no existing simulator in either set
+or in Xcode's list fits the device class, qa-tester may `xcrun simctl create` one (named after its device type) and reports it in
+`installed` / `noticed`, so the lead adds it to project.md. Still never `clone`, `rename`, `erase` or `delete` an existing simulator.
 
 **0.3.3** — two fixes from the first measurement after 0.3.0 (10 tickets). The router config keyed on words in the brief,
 and «Frameworks/», «Project.swift», «export», «caption» appear in almost every brief (`not_in_scope`, `fragile_ground`, Figma

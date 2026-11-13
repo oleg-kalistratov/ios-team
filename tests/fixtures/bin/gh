@@ -1,0 +1,9 @@
+#!/bin/bash
+# Fake gh for hooks.test.sh: `pr list` prints $FAKE_GH_PRS (default []), `pr view` prints $FAKE_GH_VIEW or fails like a missing PR,
+# `pr create` prints a PR URL and appends its arguments to $FAKE_GH_LOG, anything else prints nothing.
+case "${1:-} ${2:-}" in
+  "pr list") echo "${FAKE_GH_PRS:-[]}" ;;
+  "pr view") [ -n "${FAKE_GH_VIEW:-}" ] && echo "$FAKE_GH_VIEW" || exit 1 ;;
+  "pr create") [ -n "${FAKE_GH_LOG:-}" ] && echo "$*" >> "$FAKE_GH_LOG"; echo "https://github.com/example-org/myapp-ios/pull/77" ;;
+esac
+exit 0

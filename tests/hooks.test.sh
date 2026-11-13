@@ -721,6 +721,45 @@ plugin_paths() { grep -ohE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT"/a
 ok "every \${CLAUDE_PLUGIN_ROOT}/ path the prompts name exists ($(plugin_paths | tr '\n' ' '))" '[ -z "$(plugin_paths)" ]'
 ok "no project or company names in the repo (scripts/check-neutral.sh)" '"$S/check-neutral.sh" >/dev/null'
 
+WS=$S/worktree.sh PRS=$S/pr.sh WT=$T/myapp-ios-ABC-4242                                    # --- worktree.sh and pr.sh (0.4.0)
+mkdir -p "$R/.claude" && echo 'DEV_SCHEME="MyAppTest"' > "$R/.claude/ios-build.conf"
+export IOS_SH=$FX/bin/fake-ios.sh IOS_TEAM_MIN_FREE_GB=0                                     # the sandbox shares the real disk
+ok "worktree.sh create: manual path (no origin), generate through the fake ios.sh, config copied, keys printed" 'OUT=$("$WS" create abc-4242 --base develop 2>"$T/err"); rc=$?; [ $rc = 0 ] &&
+  [ "$(git -C "$WT" branch --show-current)" = feature/ABC-4242 ] && [ -f "$WT/.claude/ios-build.conf" ] &&
+  grep -q "^worktree: $WT$" <<<"$OUT" && grep -q "^conf: copied$" <<<"$OUT" && grep -q "^path: manual$" <<<"$OUT" && grep -q "^base_sha: [0-9a-f]\{40\}$" <<<"$OUT" && ! ls -d "$L"/heavy-* 2>/dev/null'
+ok "worktree.sh create again: exit 3 with a decision, nothing changed" 'OUT=$("$WS" create ABC-4242 2>/dev/null); [ $? = 3 ] && grep -q "^decision: Папка $WT уже есть" <<<"$OUT" && grep -q "^options: " <<<"$OUT"'
+ok "worktree.sh create: a bad key or a pilot without a sha is usage/failure, not a worktree" '"$WS" create "bad key" 2>/dev/null; [ $? = 1 ] && "$WS" create ABC-4243 --type pilot --base develop 2>/dev/null; [ $? = 1 ] && [ ! -e "$T/myapp-ios-pilot-ABC-4243" ]'
+echo note > "$WT/notes.txt"
+ok "worktree.sh remove: untracked files → exit 3 listing them, worktree kept" 'OUT=$("$WS" remove "$WT" 2>/dev/null); [ $? = 3 ] && grep -q "^decision: .*notes.txt" <<<"$OUT" && [ -d "$WT" ]'
+rm "$WT/notes.txt"; echo ".claude/ios-build.conf" > "$T/discard.txt"           # the sandbox repo does not gitignore .claude/, the real one does
+ok "worktree.sh remove: a --discard-files list that differs from the leftovers is a decision, not a removal" 'echo other.txt > "$T/discard2.txt"; OUT=$("$WS" remove "$WT" --unmerged-ok --discard-files "$T/discard2.txt" 2>/dev/null); [ $? = 3 ] && grep -q "^decision: В ворктри несохранённые" <<<"$OUT" && [ -d "$WT" ]'
+ok "worktree.sh remove: no PR and no --unmerged-ok → exit 3, worktree kept" 'OUT=$("$WS" remove "$WT" --discard-files "$T/discard.txt" 2>/dev/null); [ $? = 3 ] && grep -q "^decision: PR ветки feature/ABC-4242 не найден" <<<"$OUT" && [ -d "$WT" ]'
+mkdir -p "$L/sim-$A" && jq -nc --arg s S77 --arg c "$WT" --argjson t "$(date +%s)" '{session_id: $s, agent_id: "x", cwd: $c, branch: "feature/ABC-4242", acquired: $t, heartbeat: $t}' > "$L/sim-$A/owner.json"
+ok "worktree.sh remove: another live session holds a lease there → exit 3" 'OUT=$("$WS" remove "$WT" --unmerged-ok --discard-files "$T/discard.txt" --owner-session S1 2>/dev/null); [ $? = 3 ] && grep -q "^decision: Ворктри ещё в работе у другой сессии" <<<"$OUT"'
+ok "worktree.sh remove --unmerged-ok by the owner: worktree, branch and lease gone, one summary" 'OUT=$("$WS" remove "$WT" --unmerged-ok --discard-files "$T/discard.txt" --owner-session S77 2>"$T/err"); [ $? = 0 ] && [ ! -d "$WT" ] &&
+  ! git -C "$R" show-ref --verify --quiet refs/heads/feature/ABC-4242 && [ ! -d "$L/sim-$A" ] && grep -q "^removed: $WT$" <<<"$OUT" && grep -q "^main_branch: develop$" <<<"$OUT"'
+ok "worktree.sh refuses the main checkout and a stranger folder" '"$WS" remove "$R" 2>/dev/null; [ $? = 1 ] && "$WS" remove "$T/other" 2>/dev/null; [ $? = 1 ]'
+b ask guard-bash.sh "\"$WS\" remove $WT --owner-session S1" "$R" "" "Удаление worktree"
+b allow guard-bash.sh "\"$WS\" create ABC-1 --base develop" "$R"
+b deny guard-bash.sh "\"$WS\" remove $WT" "$R" ios-team:ios-engineer "только координатор"
+b ask guard-bash.sh "\"$PRS\" create $W --base develop --title t --body-file $SCR/b.md" "$W" "" "pr.sh create"
+b allow guard-bash.sh "\"$PRS\" check $W --base develop" "$W"
+b deny guard-bash.sh "\"$PRS\" push $W --base develop" "$W" ios-team:qa-tester "только координатор"
+git init -q --bare "$T/origin.git" && git -C "$R" remote add origin "$T/origin.git" && git -C "$R" push -q origin develop 2>/dev/null
+git -C "$W" commit -q --allow-empty -m "fix stuff" && git -C "$W" commit -q --allow-empty -m "ABC-9999: ok" -m "a body"
+ok "pr.sh check: a subject off commit_pattern and a commit with a body are named, exit 1" '"$PRS" check "$W" --base develop >/dev/null 2>"$T/err"; [ $? = 1 ] && grep -q "fix stuff" "$T/err" && grep -q "есть тело" "$T/err"'
+git -C "$W" reset -q --hard HEAD~2 && git -C "$W" commit -q --allow-empty -m "ABC-9999: clean"
+ok "pr.sh check: clean commits pass and print the range" 'OUT=$("$PRS" check "$W" --base develop 2>"$T/err"); [ $? = 0 ] && grep -q "^range: origin/develop..HEAD$" <<<"$OUT" && grep -q "^commits: 1$" <<<"$OUT"'
+ok "pr.sh check: a merged PR on the branch stops the push" 'FAKE_GH_PRS="[{\"number\": 5, \"state\": \"MERGED\", \"url\": \"u\"}]" "$PRS" check "$W" --base develop 2>"$T/err"; [ $? = 1 ] && grep -q "MERGED/CLOSED" "$T/err"'
+ok "pr.sh check: a base of main is refused" '"$PRS" check "$W" --base main 2>/dev/null; [ $? = 1 ]'
+ok "pr.sh create: pushes, calls gh pr create with base, head, title and body, prints pr_url" 'echo body > "$T/b.md"; rm -f "$T/gh.log"; OUT=$(FAKE_GH_LOG=$T/gh.log "$PRS" create "$W" --base develop --title "[ABC-9999] t" --body-file "$T/b.md" 2>"$T/err"); [ $? = 0 ] &&
+  git -C "$R" ls-remote --exit-code --heads origin feature/ABC-9999 >/dev/null && grep -q -- "--base develop --head feature/ABC-9999 --title \[ABC-9999\] t --body-file $T/b.md" "$T/gh.log" && grep -q "^pr_url: https://github.com/example-org/myapp-ios/pull/77$" <<<"$OUT"'
+ok "pr.sh create: an OPEN PR → push only, no second PR" 'rm -f "$T/gh.log"; OUT=$(FAKE_GH_LOG=$T/gh.log FAKE_GH_PRS="[{\"number\": 9, \"state\": \"OPEN\", \"url\": \"https://x/9\"}]" "$PRS" create "$W" --base develop --title t --body-file "$T/b.md" 2>/dev/null); [ $? = 0 ] && grep -q "^pr_url: https://x/9$" <<<"$OUT" && [ ! -s "$T/gh.log" ]'
+git -C "$W" checkout -q -b no-ticket-branch 2>/dev/null
+ok "pr.sh check: a branch without a ticket key is a decision (exit 3) unless --ticketless-ok" 'OUT=$("$PRS" check "$W" --base develop 2>/dev/null); [ $? = 3 ] && grep -q "^decision: Ветка no-ticket-branch" <<<"$OUT" && "$PRS" check "$W" --base develop --ticketless-ok >/dev/null 2>&1'
+git -C "$W" checkout -q feature/ABC-9999 && git -C "$W" branch -q -D no-ticket-branch
+unset IOS_SH IOS_TEAM_MIN_FREE_GB
+
 if [ -z "${IOS_TEAM_TEST_CHILD:-}" ]; then              # --- isolation: two whole suites at once must not interfere
   IOS_TEAM_TEST_CHILD=1 bash "$ROOT/tests/hooks.test.sh" >"$T/par1.log" 2>&1 & p1=$!
   IOS_TEAM_TEST_CHILD=1 bash "$ROOT/tests/hooks.test.sh" >"$T/par2.log" 2>&1 & p2=$!

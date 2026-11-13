@@ -38,6 +38,7 @@ oleg_words: <every exact quote that defines behaviour, names or triggers, e.g. �
 plan: <the approved plan, numbered, with file paths; what must not change>
 test_first: required | exempt — <the reason Oleg saw and accepted>   (omit = required; exempt only on his word: render-only refactor, tests-only, docs/CI-only)
 corner_cases: <T1..Tn from the seven questions (nothing, boundary, error, interrupted, twice at once, old persisted data, other language), each with the expected result>
+duo: <required for new or re-laid-out UI: the iPhone Duo adaptation is part of this task — folded and unfolded, per documentation/best-practices/iphone-duo-layout.md; engineer builds it, QA and reviewer check it>
 fragile_ground: <none | the areas where it must return needs_decision instead of guessing: money, concurrency, render/export, keychain, migrations, deeplinks>
 skills_required: ios-testing:test-first, code-style-guidance, <every row of the CLAUDE.md skill table this diff will hit: viewmodel-pattern-guidance, swiftui-conventions-guidance, localization-guidance, error-handling-guidance, navigation-guidance, dependency-injection-guidance, project-architecture-guidance, swiftlint-guidance, video-editor-service-guidance>, swiftui-expert:swiftui-expert-skill (SwiftUI work; repo conventions win)
 architect_decisions: <decisions[] from the architect result (type_or_file, layer, path, reuse, imports_allowed), or none>
@@ -126,7 +127,7 @@ existing_events: <names already in code for this area, if you know them>
 ```
 Returns `events_table`, `registry_rows` (exact rows; the sheet write is not verified), `jira_draft` (only the table «Событие | Когда | Параметры»), `audit`. Writes nothing outward.
 
-## ios-team:wt-keeper — haiku (never pass model or effort)
+## ios-team:wt-keeper — legacy since 0.4.0: the lead runs `scripts/worktree.sh create|remove|scratch|remove-scratch` itself (SKILL.md stages 1 and 6); the template stays for reading old run logs
 
 Background for `create`, `scratch` and `sweep-derived-data`; **foreground** for `remove` and `remove-scratch` (their one compound removal command raises one dialog).
 
@@ -146,7 +147,7 @@ ref: <branch | sha | pull/<n>/head>  build: true|false  name: <short>  (scratch;
 ```
 Returns `worktree`, `branch`, `base`, `base_sha`. It never calls `ccd_*` tools, never deletes user files to make room, never moves untracked files — it lists them and stops.
 
-## ios-team:publisher — foreground, sonnet medium
+## ios-team:publisher — legacy since 0.4.0: the lead runs `scripts/pr.sh check|push|create|status` itself, writes the body with pr-description-ru and uses the Atlassian MCP for Jira (SKILL.md stage 5); the template stays for reading old run logs
 
 Spawn only after Oleg's word; quote it. One outward action per word; the dialog is the confirmation.
 

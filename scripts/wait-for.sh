@@ -10,6 +10,6 @@ file=${1:-}; pattern=${2:-}; max=${3:-540}
 start=$SECONDS
 while :; do
   if [ -f "$file" ] && line=$(grep -E -m1 -- "$pattern" "$file" 2>/dev/null) && [ -n "$line" ]; then printf '%s\n' "$line"; exit 0; fi
-  [ $(( SECONDS - start )) -ge "$max" ] && { echo "wait-for: «$pattern» не появилось в $file за $max с — вызови ещё раз, команда может ещё идти" >&2; exit 124; }
+  [ $(( SECONDS - start )) -ge "$max" ] && { echo "wait-for: «${pattern}» не появилось в $file за $max с — вызови ещё раз, команда может ещё идти" >&2; exit 124; }
   sleep "${WAIT_FOR_POLL:-5}"
 done

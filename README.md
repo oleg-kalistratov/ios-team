@@ -59,8 +59,8 @@ Prices are $ per million tokens, input/output: haiku 1/5, sonnet 2/10, opus 4/20
 | `qa-tester` | sonnet, high | background | Hundreds of simulator calls with screenshots cost half as much per token and leave the main context clean; derives its own corner cases. |
 | `reviewer` | sonnet, high | background | Fresh-context correctness review of a slice (≤40 files) is mid-depth; the coordinator re-verifies each finding. |
 | `analytics` | sonnet, high | background | Methodology, registry and event audits are judgement on fixed rules, not deep code reasoning. |
-| `wt-keeper` | haiku (no effort) | background; foreground for removal | A fixed recipe of git and script calls; the cheapest model that follows it. |
-| `publisher` | sonnet, medium | foreground | Russian prose plus fixed Jira fields; foreground so the permission dialog reaches you. |
+| `wt-keeper` | — (legacy) | — | Since 0.4.0 the coordinator runs `scripts/worktree.sh` itself: a fixed recipe needs no model, and the agent's questions were a third of its stops. |
+| `publisher` | — (legacy) | — | Since 0.4.0 the coordinator runs `scripts/pr.sh` itself (checks, push, PR in one dialog), writes the body with the pr-description-ru skill and uses the Atlassian MCP for Jira. |
 
 `fable` is never a default: the coordinator passes it per call (engine/Metal work, a big
 architecture decision, one reviewer on a 100+-file PR) only after you say yes.
@@ -80,9 +80,10 @@ cannot Edit (they write evidence and drafts only into the session scratchpad).
 2. **The native dialog is the confirmation.** A PreToolUse hook answers `ask` for every
    outward action, always, with a Russian reason that names the target («Пуш
    feature/ABC-123 в origin и создание PR в develop»). The model cannot click it, and a
-   background agent cannot show it — so outward actions run only from the main session or a
-   foreground agent (`publisher`, `wt-keeper` for removals). Push + PR is one command and one
-   dialog; worktree + branch removal is one command and one dialog.
+   background agent cannot show it — so outward actions run only from the main session
+   (`scripts/pr.sh`, `scripts/worktree.sh remove`; the hook asks on the script call itself).
+   Push + PR is one command and one dialog; worktree + branch removal is one command and one
+   dialog.
 3. **The never-list is denied** with a Russian reason: fastlane, merging a PR in any form,
    workflow dispatch, release create/delete, force-push to protected branches, branch and
    tag deletion on the remote, `sudo`, `launchctl`, the CI runner installer,
@@ -312,6 +313,18 @@ parser) after editing an agent.
 - Writing rows to the analytics registry sheet; the analytics agent drafts exact rows.
 
 ## Changelog
+
+**0.4.0** — two agents become scripts, two classes become the coordinator's own work. Three weeks of journal (27 tickets):
+wt-keeper stopped with a question in a third of its runs and publisher ran 82 times for push, PR and Jira — round trips for
+work that is a fixed recipe. New `scripts/worktree.sh create|remove|scratch|remove-scratch` (the whole wt-keeper recipe:
+fresh base, `Scripts/new-worktree.sh` or the manual path, config copy, generate under the heavy lease, verification; removal
+checks leases, processes, leftovers and the PR state, then removes worktree + branch + leases + DerivedData + the ticket's
+simulators as one command; exit 3 with `decision:`/`options:` where Oleg must choose) and `scripts/pr.sh check|push|create|status`
+(the publisher's pre-push checks — merged branch, commit lint against `commit_pattern`, trailers, bodies, branch name — then push
+and `gh pr create` in one command). The coordinator runs both itself; guard-bash asks on `worktree.sh remove` and `pr.sh push|create`
+and denies them to agents, so the dialog model is unchanged. The lead writes class S and M changes itself in-session and spawns the
+engineer only for class L or when Oleg asks for background work («в фоне», «параллельно»); the tester and reviewer stay as agents.
+The wt-keeper and publisher agent files remain for reading old run logs but the lead no longer spawns them.
 
 **0.3.4** — simulators that exist, or a new one. `qa_sims_dev` / `qa_sims_prod` must name simulators that exist on the Mac
 (`xcrun simctl list devices available` is the truth; empty sets mean any existing simulator); when no existing simulator in either set

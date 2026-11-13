@@ -1010,6 +1010,17 @@ def bash_rules(s, c, segs):
     bad_env = [x.split("=", 1)[0] for x in s.assigns if CFG_VARS.match(x.split("=", 1)[0])]
     if bad_env:
         return [("deny", "%s запрещён (меняет конфиг git в обход проверок)" % bad_env[0])]
+    if a0 in ("worktree.sh", "pr.sh"):
+        # The coordinator's own scripts (0.4.0): they replace the wt-keeper and publisher agents, so the dialog the agents' commands
+        # raised now comes from the script call itself — a removal or a push stays one command and one dialog.
+        if c.agent:
+            return [("deny", "%s запускает только координатор, не %s" % (a0, c.role or "агент"))]
+        sub = a[1] if len(a) > 1 else ""
+        if a0 == "worktree.sh" and sub in ("remove", "remove-scratch"):
+            return [("ask", "Удаление worktree %s одной командой: ветка, аренды, DerivedData, симуляторы тикета" % (a[2] if len(a) > 2 else "?"))]
+        if a0 == "pr.sh" and sub in ("push", "create"):
+            return [("outward", "pr.sh %s: push ветки%s в origin" % (sub, " и открытие PR" if sub == "create" else ""))]
+        return []
     if a0 in ("sudo", "doas", "launchctl", "ci-runner-setup.sh"):
         return [("deny", "%s запрещён" % a0)]
     if a0 == "fastlane":

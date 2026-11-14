@@ -314,6 +314,12 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.2** — the tester's tree driving actually works. The 0.3.1 prompt called `sim.sh ui <UDID>`, but sim.sh takes the
+simulator from `SIM_UDID=` and, with two simulators booted, answers «refusing to guess» — so every run fell back to
+screenshots and coordinate taps (checked 2026-11-14: idb itself answers the tree in 0.3–0.8 s). The prompt now names
+`SIM_UDID=<UDID> "<sim.sh>" ui|tap-label|wait-label|type`, says where sim.sh lives, and limits the screenshot fallback to the
+single step whose element has no accessibility label, reported in `not_verified` so the engineer adds one.
+
 **0.4.1** — the tester installs the gate's build instead of building again. New `scripts/app-product.sh <worktree> [dev|prod]`
 prints the app the last gate left in the worktree's DerivedData when it is newer than every source file (else exit 1: build
 first); qa-tester installs it with `simctl install`, and the lead passes the path in the brief. Why: with one heavy slot a QA

@@ -314,6 +314,12 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.1** — the tester installs the gate's build instead of building again. New `scripts/app-product.sh <worktree> [dev|prod]`
+prints the app the last gate left in the worktree's DerivedData when it is newer than every source file (else exit 1: build
+first); qa-tester installs it with `simctl install`, and the lead passes the path in the brief. Why: with one heavy slot a QA
+build queued behind the engineer's gates for up to 45 minutes and was killed twice on 2026-11-13 — eleven QA stops in one
+ticket were «сборка ещё идёт» or «слот занят».
+
 **0.4.0** — two agents become scripts, two classes become the coordinator's own work. Three weeks of journal (27 tickets):
 wt-keeper stopped with a question in a third of its runs and publisher ran 82 times for push, PR and Jira — round trips for
 work that is a fixed recipe. New `scripts/worktree.sh create|remove|scratch|remove-scratch` (the whole wt-keeper recipe:

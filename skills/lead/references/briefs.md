@@ -89,7 +89,7 @@ coordinator_cases: <abs path of the file with T1..Tn — it reads it only after 
 rerun_ids: <rerun mode: only these ids>
 before: <compare mode: abs path of the scratch checkout built from the base (the «before» app), or none>
 flavor: <dev | prod — prod only when a case touches subscriptions (paywall, offers, purchase, restore, manage/cancel subscription, wallet, balance): they do not work on dev>
-build: <«собери и поставь <dev_scheme|prod_scheme> из worktree» | «уже стоит: <scheme> <branch>@<sha>»> — always ios.sh with --simulator (prod: plus --prod), on a simulator of that flavor's set
+build: <«поставь из DerivedData: <abs app path from scripts/app-product.sh <wt> dev>» (the gate just built it — the tester installs it with simctl, no heavy slot) | «собери и поставь <dev_scheme|prod_scheme> из worktree» | «уже стоит: <scheme> <branch>@<sha>»> — a build only when app-product.sh says the app is missing or stale; then ios.sh with --simulator (prod: plus --prod), on a simulator of that flavor's set
 simulator: <UDID and name of the free one from §7 «Simulators» — a preference; when it is taken meanwhile the Тестировщик moves to the next free one itself | «любой свободный»>
 media_wanted: <screenshots | video for the PR | none>
 analytics_check: <events with expected params (the analytics agent's qa_handoff) to find in Debug Menu → Local Analytics, or none>

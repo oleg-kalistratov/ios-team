@@ -636,6 +636,13 @@ ok "wait-for.sh returns the line once it appears, 124 on timeout, 64 on usage" '
   [ "$(WAIT_FOR_POLL=1 "$S/wait-for.sh" "$T/wf.log" "^exit=" 10)" = "exit=0" ] && WAIT_FOR_POLL=1 "$S/wait-for.sh" "$T/wf.log" "verdict" 2 2>/dev/null; [ $? = 124 ] &&
   "$S/wait-for.sh" "$T/wf.log" 2>/dev/null; [ $? = 64 ]'
 check allow guard-bash.sh "$(B "\"$S/wait-for.sh\" $SCR/wt/x.log \"^exit=\" 540" "$W" ios-team:wt-keeper)"
+APP="$("$S/lib/run.sh" derived-data "$W/MyApp.xcworkspace")/Build/Products/Debug-iphonesimulator/MyAppTest.app"   # --- app-product.sh
+ok "app-product.sh: no built app → exit 1 with a build hint" '"$S/app-product.sh" "$W" dev 2>"$T/err"; [ $? = 1 ] && grep -q "сначала сборка" "$T/err"'
+mkdir -p "$APP" && touch "$APP/Info.plist" && touch -t 202601010000 "$W/Modules/FooFeature/Sources/Old.swift"
+ok "app-product.sh: a fresh app prints its path; prod wants the prod scheme" '[ "$("$S/app-product.sh" "$W" dev)" = "$APP" ] && "$S/app-product.sh" "$W" prod 2>/dev/null; [ $? = 1 ]'
+sleep 1; touch "$W/Modules/FooFeature/Sources/Old.swift"
+ok "app-product.sh: a source newer than the app → stale, exit 1 naming the file" '"$S/app-product.sh" "$W" dev 2>"$T/err"; [ $? = 1 ] && grep -q "Old.swift" "$T/err"'
+rm -rf "$APP"
 ok "generate.sh refuses a folder that is not a checkout (exit 3) and a missing argument (64)" '"$S/generate.sh" "$T/other" 2>/dev/null; [ $? = 3 ] && "$S/generate.sh" 2>/dev/null; [ $? = 64 ]'
 check allow guard-bash.sh "$(B "\"$S/generate.sh\" $W > $SCR/gen.out 2>&1; echo \"exit=\$?\" >> $SCR/gen.out" "$W" "$E")"
 b deny guard-bash.sh 'until grep -q verdict out.json; do sleep 15; done' "$W" "$E" "Monitor"   # --- waiting loops: Monitor, not Bash

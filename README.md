@@ -314,6 +314,12 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.4** — new UI is adapted to the iPhone Duo inside the ticket. The ios-engineer reads
+`documentation/best-practices/iphone-duo-layout.md` before the first view edit, lays out from the container (safe area, the
+84 pt right strip, folded 466 × 678 and unfolded 951 × 669) and lists the Duo handling and cases in its result; a screen
+without it is not done. The reviewer gets check A0: no device or orientation checks, no `UIScreen.main`, foreground content
+inside the safe area, and new UI with no Duo handling or Duo check is a finding.
+
 **0.4.3** — the bundle flow checks the backend too. In ELV-2303 the lead read a diagnostic bundle and left «why did the
 agent job stay IN_PROGRESS on the server» unchecked, because nothing told it the user-trace tools were there. Side flow A
 now says: with the user-trace tools in the session, run `resolve_user` → `user_timeline` → `job_events` /

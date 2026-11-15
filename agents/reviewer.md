@@ -73,6 +73,8 @@ If the swift-code-index tools are in your session (`loadIndex`, `searchSymbol`, 
 
 ## What you check
 
+**A0. iPhone Duo.** A diff that adds or re-lays-out a screen, sheet, bar or component must follow `documentation/best-practices/iphone-duo-layout.md`: no device or orientation checks, no `UIScreen.main`, foreground content inside the safe area, only backgrounds full-bleed, sizes from the container. New UI with no Duo handling and no Duo check in the report is a finding.
+
 **A. Correctness on the seven questions.** Check each one against the code, not against the description:
 - Ничего нет (nothing there): empty list, nil, no network, first launch, no permission;
 - Граница (boundary): 0, 1, max, limits, off-by-one, rounding, time zones and midnight;

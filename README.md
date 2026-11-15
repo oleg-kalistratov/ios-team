@@ -314,6 +314,13 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.3** — the bundle flow checks the backend too. In ELV-2303 the lead read a diagnostic bundle and left «why did the
+agent job stay IN_PROGRESS on the server» unchecked, because nothing told it the user-trace tools were there. Side flow A
+now says: with the user-trace tools in the session, run `resolve_user` → `user_timeline` → `job_events` /
+`subscription_events` for the bundle's UTC window, keep «видно на бэкенде» apart from the bundle and the hypothesis, use n8n
+only for questions about a run of an n8n workflow, and without these servers name the backend check under «Что не
+проверено». Backend ids follow the bundle rule: never in Jira or PR text.
+
 **0.4.2** — the tester's tree driving actually works. The 0.3.1 prompt called `sim.sh ui <UDID>`, but sim.sh takes the
 simulator from `SIM_UDID=` and, with two simulators booted, answers «refusing to guess» — so every run fell back to
 screenshots and coordinate taps (checked 2026-11-14: idb itself answers the tree in 0.3–0.8 s). The prompt now names

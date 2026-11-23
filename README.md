@@ -314,6 +314,13 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.5** — a system sheet closes through a system toolbar button. In one ticket a report sheet drew its own X inside
+the content, so on the folded iPhone Duo it stayed in the main area while system sheets put Close in the 84 pt right strip.
+Wrapped in a `NavigationStack` with `Button(role: .close)` in a `.topBarTrailing` toolbar item, the system moved Close into
+the strip on the folded Duo (centre x 418 of 466) and kept it in the sheet's top-right corner on the unfolded Duo, where
+the sheet floats, and on iPhones. The ios-engineer builds system sheets that way, the reviewer flags a hand-drawn close
+row in a system sheet (A0), and the qa-tester checks where Close sits folded and unfolded.
+
 **0.4.4** — new UI is adapted to the iPhone Duo inside the ticket. The ios-engineer reads
 `documentation/best-practices/iphone-duo-layout.md` before the first view edit, lays out from the container (safe area, the
 84 pt right strip, folded 466 × 678 and unfolded 951 × 669) and lists the Duo handling and cases in its result; a screen

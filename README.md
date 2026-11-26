@@ -314,6 +314,11 @@ parser) after editing an agent.
 
 ## Changelog
 
+**0.4.6** — the lead's routing table and side flows caught up with 0.4.0: «создай ворк трее», «пушни», «открой пр», «поправь
+описание», Jira/Confluence writes, «сравни до и после», tech branches, sync PRs, foreign-PR scratches and pilots all name
+`worktree.sh` / `pr.sh` / the Atlassian MCP now. The stages said «no agent since 0.4.0» while §3 and §5 still said «Worktree» and
+«Публикатор», and the journal showed 29 wt-keeper and publisher spawns in the twelve days after 0.4.0, 21 of them on one day.
+
 **0.4.5** — a system sheet closes through a system toolbar button. In one ticket a report sheet drew its own X inside
 the content, so on the folded iPhone Duo it stayed in the main area while system sheets put Close in the 84 pt right strip.
 Wrapped in a `NavigationStack` with `Button(role: .close)` in a `.topBarTrailing` toolbar item, the system moved Close into
@@ -327,7 +332,7 @@ row in a system sheet (A0), and the qa-tester checks where Close sits folded and
 without it is not done. The reviewer gets check A0: no device or orientation checks, no `UIScreen.main`, foreground content
 inside the safe area, and new UI with no Duo handling or Duo check is a finding.
 
-**0.4.3** — the bundle flow checks the backend too. In ELV-2303 the lead read a diagnostic bundle and left «why did the
+**0.4.3** — the bundle flow checks the backend too. On one ticket the lead read a diagnostic bundle and left «why did the
 agent job stay IN_PROGRESS on the server» unchecked, because nothing told it the user-trace tools were there. Side flow A
 now says: with the user-trace tools in the session, run `resolve_user` → `user_timeline` → `job_events` /
 `subscription_events` for the bundle's UTC window, keep «видно на бэкенде» apart from the bundle and the hypothesis, use n8n
